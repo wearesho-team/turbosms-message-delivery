@@ -15,12 +15,20 @@ class Config implements ConfigInterface
     protected $password;
 
     /** @var string */
+    protected $senderName;
+
+    /** @var string */
     protected $uri;
 
-    public function __construct(string $login, string $password, string $uri = ConfigInterface::URI)
-    {
+    public function __construct(
+        string $login,
+        string $password,
+        string $sender = ConfigInterface::SENDER,
+        string $uri = ConfigInterface::URI
+    ) {
         $this->login = $login;
         $this->password = $password;
+        $this->senderName = $sender;
         $this->uri = $uri;
     }
 
@@ -37,5 +45,10 @@ class Config implements ConfigInterface
     public function getUri(): string
     {
         return $this->uri;
+    }
+
+    public function getSenderName(): string
+    {
+        return $this->senderName;
     }
 }

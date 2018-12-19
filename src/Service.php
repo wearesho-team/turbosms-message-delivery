@@ -12,42 +12,79 @@ use Wearesho\Delivery;
  */
 class Service implements Delivery\ServiceInterface
 {
+    protected const AUTH_SUCCESS = "Вы успешно авторизировались";
+    protected const SEND_SUCCESS = "Сообщения успешно отправлены";
+    protected const SENDER_NAME_MAX_LENGTH = 11;
+
     /** @var ConfigInterface */
     protected $config;
 
-    /** @var ClientInterface */
-    protected $client;
-
     /** @var AsyncSoap\SoapClientInterface */
-    private $soap;
+    protected $soap;
 
     public function __construct(ConfigInterface $config, ClientInterface $client)
     {
         $this->config = $config;
-        $this->client = $client;
-        $this->soap = (new AsyncSoap\Guzzle\Factory())->create()
+        $this->soap = (new AsyncSoap\Guzzle\Factory())->create($client, $config->getUri());
     }
 
+    /**
+     * @param Delivery\MessageInterface $message
+     *
+     * @throws Delivery\Exception
+     */
     public function send(Delivery\MessageInterface $message): void
     {
-        $client = (new AsyncSoap\Guzzle\Factory())->create(
-            $this->client,
-            $this->config->getUri()
-        );
+        $this->validateRecipient($message);
+        $sender = $this->fetchSenderName($message);
+        $this->auth();
 
-        $result = $client->call('Auth', [[
-            'login' => $this->getConfig()->getLogin(),
-            'password' => $this->getConfig()->getPassword(),
-        ]]);
+        $sms = [
+            'sender' => $sender,
+            'destination' => $message->getRecipient(),
+            'text' => $message->getText(),
+        ];
 
-        if ($result->AuthResult !== "Вы успешно авторизировались") {
-            throw new Delivery\Exception($result->AuthResult);
+        $response = $this->getSoap()->call('SendSMS', [$sms]);
+
+        $status = $response->SendSMSResult[0];
+        if (trim($status) !== static::SEND_SUCCESS) {
+            throw new Delivery\Exception($status);
         }
     }
 
-    public function getClient(): ClientInterface
+    /**
+     * @return float
+     * @throws Delivery\Exception
+     */
+    public function balance(): float
     {
-        return $this->client;
+        $this->auth();
+
+        $response = $this->getSoap()->call('GetCreditBalance', [])->GetCreditBalanceResult;
+
+        if (!is_numeric($response)) {
+            throw new Delivery\Exception($response);
+        }
+
+        return (float)$response;
+    }
+
+    /**
+     * @throws Delivery\Exception
+     */
+    public function auth(): void
+    {
+        $credentials = [
+            'login' => $this->getConfig()->getLogin(),
+            'password' => $this->getConfig()->getPassword(),
+        ];
+
+        $result = $this->getSoap()->call('Auth', [$credentials]);
+
+        if (trim($result->AuthResult) !== static::AUTH_SUCCESS) {
+            throw new Delivery\Exception($result->AuthResult);
+        }
     }
 
     public function getConfig(): ConfigInterface
@@ -55,8 +92,39 @@ class Service implements Delivery\ServiceInterface
         return $this->config;
     }
 
-    protected function soap(): AsyncSoap\SoapClientInterface
+    public function getSoap(): AsyncSoap\SoapClientInterface
     {
-        return (new AsyncSoap\Guzzle\Factory())
+        return $this->soap;
+    }
+
+    /**
+     * @param Delivery\MessageInterface $message
+     *
+     * @throws Delivery\Exception
+     */
+    protected function validateRecipient(Delivery\MessageInterface $message): void
+    {
+        if (!preg_match('/^\+380\d{9}$/', $message->getRecipient())) {
+            throw new Delivery\Exception("Unsupported recipient format");
+        }
+    }
+
+    /**
+     * @param Delivery\MessageInterface $message
+     *
+     * @return string
+     * @throws Delivery\Exception
+     */
+    protected function fetchSenderName(Delivery\MessageInterface $message): string
+    {
+        $name = $message instanceof Delivery\ContainsSenderName
+            ? $message->getSenderName()
+            : $this->config->getSenderName();
+
+        if (mb_strlen($name) > static::SENDER_NAME_MAX_LENGTH) {
+            throw new Delivery\Exception('Sender name must be equal or less than 11 symbols');
+        }
+
+        return $name;
     }
 }

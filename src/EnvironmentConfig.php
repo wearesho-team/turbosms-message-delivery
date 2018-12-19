@@ -27,6 +27,11 @@ class EnvironmentConfig extends Environment\Config implements ConfigInterface
 
     public function getUri(): string
     {
-        $this->getEnv('URI', ConfigInterface::URI);
+        return $this->getEnv('URI', ConfigInterface::URI);
+    }
+
+    public function getSenderName(): string
+    {
+        return $this->getEnv('SENDER', ConfigInterface::SENDER);
     }
 }
