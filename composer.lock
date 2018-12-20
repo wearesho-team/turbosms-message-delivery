@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e62eba66732d8feb998da67d4b600ac7",
+    "content-hash": "3bec1c7f0e3c7fde9f916238c978d0d2",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -497,16 +497,16 @@
         },
         {
             "name": "wearesho-team/message-delivery",
-            "version": "dev-feature/balance-support",
+            "version": "1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wearesho-team/message-delivery.git",
-                "reference": "5cd98b1ded0aa24b2655b202da0eb0793e239027"
+                "reference": "4cbc332beac795486d489d28f6d569e0c6e98814"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wearesho-team/message-delivery/zipball/5cd98b1ded0aa24b2655b202da0eb0793e239027",
-                "reference": "5cd98b1ded0aa24b2655b202da0eb0793e239027",
+                "url": "https://api.github.com/repos/wearesho-team/message-delivery/zipball/4cbc332beac795486d489d28f6d569e0c6e98814",
+                "reference": "4cbc332beac795486d489d28f6d569e0c6e98814",
                 "shasum": ""
             },
             "require": {
@@ -533,7 +533,7 @@
                 }
             ],
             "description": "Message Delivery Interfaces",
-            "time": "2018-12-20T12:03:12+00:00"
+            "time": "2018-12-20T14:48:27+00:00"
         },
         {
             "name": "zendframework/zend-diactoros",
@@ -2063,9 +2063,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "wearesho-team/message-delivery": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
