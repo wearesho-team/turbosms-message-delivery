@@ -47,8 +47,12 @@ class Service implements Delivery\ServiceInterface
 
         $response = $this->client->call('SendSMS', [$sms]);
 
-        $status = $response->SendSMSResult->ResultArray[0];
-        if (!preg_match("/" . static::SEND_SUCCESS . "/", $status)) {
+        $status = $response->SendSMSResult->ResultArray;
+        if (is_array($status) && !preg_match("/" . static::SEND_SUCCESS . "/", $status[0])) {
+            throw new Delivery\Exception($status[0]);
+        }
+
+        if (!is_array($status)) {
             throw new Delivery\Exception($status);
         }
     }

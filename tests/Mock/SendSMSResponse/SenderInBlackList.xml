@@ -4,7 +4,6 @@
         <s:SendSMSResponse xmlns:s="http://turbosms.in.ua/api/Turbo">
             <s:SendSMSResult>
                 <s:ResultArray>Данная подпись запрещена администратором</s:ResultArray>
-                <s:ResultArray>id</s:ResultArray>
             </s:SendSMSResult>
         </s:SendSMSResponse>
     </env:Body>

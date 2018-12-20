@@ -9,7 +9,7 @@ namespace Wearesho\Delivery\TurboSms;
 interface ConfigInterface
 {
     public const URI = 'http://turbosms.in.ua/api/wsdl.html';
-    public const SENDER = 'System';
+    public const SENDER = 'Msg';
 
     public function getLogin(): string;
 
