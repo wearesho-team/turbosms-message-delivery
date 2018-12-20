@@ -7,7 +7,8 @@
     "authors": [
         {
             "name": "Roman Varkuta",
-            "email": "roman.varkuta@gmail.com"
+            "email": "roman.varkuta@gmail.com",
+            "role": "developer"
         }
     ],
     "require": {
