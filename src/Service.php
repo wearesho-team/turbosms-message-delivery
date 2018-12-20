@@ -10,7 +10,7 @@ use Wearesho\Delivery;
  * Class Service
  * @package Wearesho\Delivery\TurboSms
  */
-class Service implements Delivery\ServiceInterface
+class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
 {
     protected const AUTH_SUCCESS = "Вы успешно авторизировались";
     protected const SEND_SUCCESS = "Сообщения успешно отправлены";
@@ -58,10 +58,10 @@ class Service implements Delivery\ServiceInterface
     }
 
     /**
-     * @return float
+     * @return Delivery\BalanceInterface
      * @throws Delivery\Exception
      */
-    public function balance(): float
+    public function balance(): Delivery\BalanceInterface
     {
         $this->auth();
 
@@ -71,7 +71,7 @@ class Service implements Delivery\ServiceInterface
             throw new Delivery\Exception($response);
         }
 
-        return (float)$response;
+        return new Delivery\Balance((float)$response, 'Credits');
     }
 
     /**

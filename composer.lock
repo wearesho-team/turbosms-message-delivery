@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8ebb25fc25f6979c7f843e80ca526e84",
+    "content-hash": "e62eba66732d8feb998da67d4b600ac7",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -497,16 +497,16 @@
         },
         {
             "name": "wearesho-team/message-delivery",
-            "version": "1.5.0",
+            "version": "dev-feature/balance-support",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wearesho-team/message-delivery.git",
-                "reference": "b9d79a8da6f9385852f070607aad3236aa7ce4c4"
+                "reference": "5cd98b1ded0aa24b2655b202da0eb0793e239027"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wearesho-team/message-delivery/zipball/b9d79a8da6f9385852f070607aad3236aa7ce4c4",
-                "reference": "b9d79a8da6f9385852f070607aad3236aa7ce4c4",
+                "url": "https://api.github.com/repos/wearesho-team/message-delivery/zipball/5cd98b1ded0aa24b2655b202da0eb0793e239027",
+                "reference": "5cd98b1ded0aa24b2655b202da0eb0793e239027",
                 "shasum": ""
             },
             "require": {
@@ -514,7 +514,7 @@
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.1",
-                "squizlabs/php_codesniffer": "^3.2"
+                "squizlabs/php_codesniffer": "^3.3.2"
             },
             "type": "library",
             "autoload": {
@@ -533,7 +533,7 @@
                 }
             ],
             "description": "Message Delivery Interfaces",
-            "time": "2018-05-21T09:59:54+00:00"
+            "time": "2018-12-20T12:03:12+00:00"
         },
         {
             "name": "zendframework/zend-diactoros",
@@ -2063,7 +2063,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "wearesho-team/message-delivery": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

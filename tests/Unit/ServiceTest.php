@@ -129,7 +129,13 @@ class ServiceTest extends TestCase
         $this->mock->append($this->mockResponse('SuccessGetCreditBalance'));
 
         /** @noinspection PhpUnhandledExceptionInspection */
-        $this->assertEquals(2500.75, $this->service->balance());
+        $this->assertEquals(
+            new Delivery\Balance(
+                2500.75,
+                'Credits'
+            ),
+            $this->service->balance()
+        );
     }
 
     public function testFailedGetCreditBalance(): void
