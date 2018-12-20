@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">
+    <env:Body>
+        <s:SendSMSResponse xmlns:s="http://turbosms.in.ua/api/Turbo">
+            <s:SendSMSResult>
+                <s:ResultArray>Неправильная подпись.
+Подпись отправителя не должна быть длиннее 11 символов и может содержать буквы латинского алфавита, цифры, а также знаки: .-&amp;</s:ResultArray>
+                <s:ResultArray>id</s:ResultArray>
+            </s:SendSMSResult>
+        </s:SendSMSResponse>
+    </env:Body>
+</env:Envelope>

@@ -20,12 +20,12 @@ class Service implements Delivery\ServiceInterface
     protected $config;
 
     /** @var AsyncSoap\SoapClientInterface */
-    protected $soap;
+    protected $client;
 
     public function __construct(ConfigInterface $config, ClientInterface $client)
     {
         $this->config = $config;
-        $this->soap = (new AsyncSoap\Guzzle\Factory())->create($client, $config->getUri());
+        $this->client = (new AsyncSoap\Guzzle\Factory())->create($client, $config->getUri());
     }
 
     /**
@@ -45,10 +45,10 @@ class Service implements Delivery\ServiceInterface
             'text' => $message->getText(),
         ];
 
-        $response = $this->getSoap()->call('SendSMS', [$sms]);
+        $response = $this->client->call('SendSMS', [$sms]);
 
-        $status = $response->SendSMSResult[0];
-        if (trim($status) !== static::SEND_SUCCESS) {
+        $status = $response->SendSMSResult->ResultArray[0];
+        if (!preg_match("/" . static::SEND_SUCCESS . "/", $status)) {
             throw new Delivery\Exception($status);
         }
     }
@@ -61,7 +61,7 @@ class Service implements Delivery\ServiceInterface
     {
         $this->auth();
 
-        $response = $this->getSoap()->call('GetCreditBalance', [])->GetCreditBalanceResult;
+        $response = $this->client->call('GetCreditBalance', [])->GetCreditBalanceResult;
 
         if (!is_numeric($response)) {
             throw new Delivery\Exception($response);
@@ -76,25 +76,15 @@ class Service implements Delivery\ServiceInterface
     public function auth(): void
     {
         $credentials = [
-            'login' => $this->getConfig()->getLogin(),
-            'password' => $this->getConfig()->getPassword(),
+            'login' => $this->config->getLogin(),
+            'password' => $this->config->getPassword(),
         ];
 
-        $result = $this->getSoap()->call('Auth', [$credentials]);
+        $result = $this->client->call('Auth', [$credentials]);
 
         if (trim($result->AuthResult) !== static::AUTH_SUCCESS) {
             throw new Delivery\Exception($result->AuthResult);
         }
-    }
-
-    public function getConfig(): ConfigInterface
-    {
-        return $this->config;
-    }
-
-    public function getSoap(): AsyncSoap\SoapClientInterface
-    {
-        return $this->soap;
     }
 
     /**
