@@ -20,12 +20,16 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
     protected $config;
 
     /** @var AsyncSoap\SoapClientInterface */
-    protected $client;
+    protected $soap;
+
+    /** @var ClientInterface */
+    private $client;
 
     public function __construct(ConfigInterface $config, ClientInterface $client)
     {
         $this->config = $config;
-        $this->client = (new AsyncSoap\Guzzle\Factory())->create($client, $config->getUri());
+        $this->client = $client;
+        $this->soap = (new AsyncSoap\Guzzle\Factory())->create($client, $config->getUri());
     }
 
     /**
@@ -45,7 +49,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
             'text' => $message->getText(),
         ];
 
-        $response = $this->client->call('SendSMS', [$sms]);
+        $response = $this->soap->call('SendSMS', [$sms]);
 
         $status = $response->SendSMSResult->ResultArray;
         if (is_array($status) && !preg_match("/" . static::SEND_SUCCESS . "/", $status[0])) {
@@ -65,7 +69,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
     {
         $this->auth();
 
-        $response = $this->client->call('GetCreditBalance', [])->GetCreditBalanceResult;
+        $response = $this->soap->call('GetCreditBalance', [])->GetCreditBalanceResult;
 
         if (!is_numeric($response)) {
             throw new Delivery\Exception($response);
@@ -79,12 +83,18 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
      */
     public function auth(): void
     {
+        $cookieSession = $this->client->getConfig('cookies')->getCookieByName('PHPSESSID');
+
+        if (!is_null($cookieSession)) {
+            return;
+        }
+
         $credentials = [
             'login' => $this->config->getLogin(),
             'password' => $this->config->getPassword(),
         ];
 
-        $result = $this->client->call('Auth', [$credentials]);
+        $result = $this->soap->call('Auth', [$credentials]);
 
         if (trim($result->AuthResult) !== static::AUTH_SUCCESS) {
             throw new Delivery\Exception($result->AuthResult);

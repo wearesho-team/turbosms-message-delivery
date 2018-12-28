@@ -49,6 +49,7 @@ class ServiceTest extends TestCase
         $this->service = new Delivery\TurboSms\Service(
             new Delivery\TurboSms\Config(static::LOGIN, static::PASSWORD),
             new GuzzleHttp\Client([
+                'cookies' => true,
                 'handler' => $stack,
             ])
         );
@@ -195,7 +196,13 @@ class ServiceTest extends TestCase
 
     protected function mockAuth(): void
     {
-        $this->mock->append($this->mockResponse('SuccessAuthResponse'));
+        $this->mock->append($this->mockResponse(
+            'SuccessAuthResponse',
+            [
+                'set-cookie' => 'PHPSESSID=q4dq58tn0pmnm8pjso2c927tp2; path=/',
+                'connection' => 'keep-alive',
+            ]
+        ));
     }
 
     protected function mockSendSmsResponse(string $xmlFileName): GuzzleHttp\Psr7\Response
@@ -203,16 +210,16 @@ class ServiceTest extends TestCase
         return $this->mockResponse("SendSMSResponse/{$xmlFileName}");
     }
 
-    protected function mockResponse(string $xmlFileName): GuzzleHttp\Psr7\Response
+    protected function mockResponse(string $xmlFileName, array $headers = []): GuzzleHttp\Psr7\Response
     {
         $body = file_get_contents(dirname(__DIR__) . "/Mock/{$xmlFileName}.xml");
 
         return new GuzzleHttp\Psr7\Response(
             200,
-            [
+            array_merge($headers, [
                 'content-type' => 'text/html',
                 'content-length' => mb_strlen($body),
-            ],
+            ]),
             $body
         );
     }
