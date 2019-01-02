@@ -1,11 +1,15 @@
-<phpunit backupGlobals="false" colors="true" convertNoticesToExceptions="false" convertWarningsToExceptions="false">
+<phpunit backupGlobals="false"
+         colors="true"
+         convertNoticesToExceptions="false"
+         convertWarningsToExceptions="false"
+         convertErrorsToExceptions="false">
     <testsuites>
         <testsuite name="Test Suite">
-            <directory suffix="Test.php">./tests</directory>
+            <directory suffix="Test.php">tests</directory>
         </testsuite>
     </testsuites>
     <filter>
-        <whitelist processUncoveredFilesFromWhiteList="true">
+        <whitelist>
             <directory suffix=".php">src</directory>
         </whitelist>
     </filter>
