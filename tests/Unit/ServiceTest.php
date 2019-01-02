@@ -30,11 +30,6 @@ class ServiceTest extends TestCase
     /** @var array */
     protected $container;
 
-    public static function setUpBeforeClass(): void
-    {
-        Notice::$enabled = false;
-    }
-
     protected function setUp(): void
     {
         $this->mock = new GuzzleHttp\Handler\MockHandler();
@@ -63,6 +58,7 @@ class ServiceTest extends TestCase
 
     public function testSuccessAuth(): void
     {
+        Notice::$enabled = false;
         $response = $this->mockResponse('SuccessAuthResponse');
         $this->mock->append($response);
 
@@ -77,6 +73,7 @@ class ServiceTest extends TestCase
      */
     public function testFailedAuth(GuzzleHttp\Psr7\Response $response, string $message): void
     {
+        Notice::$enabled = false;
         $this->mock->append($response);
 
         $this->expectException(Delivery\Exception::class);
@@ -110,6 +107,7 @@ class ServiceTest extends TestCase
 
     public function testInvalidRecipientFormat(): void
     {
+        Notice::$enabled = false;
         $this->expectException(Delivery\Exception::class);
         $this->expectExceptionMessage('Unsupported recipient format');
 
@@ -119,6 +117,7 @@ class ServiceTest extends TestCase
 
     public function testInvalidLengthSenderName(): void
     {
+        Notice::$enabled = false;
         $this->expectException(Delivery\Exception::class);
         $this->expectExceptionMessage('Sender name must be equal or less than 11 symbols');
 
@@ -132,6 +131,7 @@ class ServiceTest extends TestCase
 
     public function testSuccessGetBalance(): void
     {
+        Notice::$enabled = false;
         $this->mockAuth();
         $this->mock->append($this->mockResponse('SuccessGetCreditBalance'));
 
@@ -147,6 +147,7 @@ class ServiceTest extends TestCase
 
     public function testFailedGetCreditBalance(): void
     {
+        Notice::$enabled = false;
         $this->mockAuth();
         $this->mock->append($this->mockResponse('FailedGetCreditBalance'));
 
@@ -159,6 +160,7 @@ class ServiceTest extends TestCase
 
     public function testSuccessSendSms(): void
     {
+        Notice::$enabled = false;
         $this->mockAuth();
         $response = $this->mockSendSmsResponse('Success');
         $this->mock->append($response);
@@ -174,6 +176,7 @@ class ServiceTest extends TestCase
      */
     public function testFailedSendSms(GuzzleHttp\Psr7\Response $response, string $message): void
     {
+        Notice::$enabled = false;
         $this->mockAuth();
         $this->mock->append($response);
 
@@ -202,6 +205,7 @@ class ServiceTest extends TestCase
 
     protected function mockAuth(): void
     {
+        Notice::$enabled = false;
         $this->mock->append($this->mockResponse(
             'SuccessAuthResponse',
             [
