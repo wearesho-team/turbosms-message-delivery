@@ -3,6 +3,7 @@
 namespace Wearesho\Delivery\TurboSms\Tests\Unit;
 
 use GuzzleHttp;
+use PHPUnit\Framework\Error\Notice;
 use PHPUnit\Framework\TestCase;
 use Wearesho\Delivery;
 
@@ -28,6 +29,11 @@ class ServiceTest extends TestCase
 
     /** @var array */
     protected $container;
+
+    public static function setUpBeforeClass(): void
+    {
+        Notice::$enabled = false;
+    }
 
     protected function setUp(): void
     {
