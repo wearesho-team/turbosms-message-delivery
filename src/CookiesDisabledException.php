@@ -3,12 +3,13 @@
 namespace Wearesho\Delivery\TurboSms;
 
 use GuzzleHttp;
+use Wearesho\Delivery;
 
 /**
  * Class CookiesDisabledException
  * @package Wearesho\Delivery\TurboSms
  */
-class CookiesDisabledException extends \RuntimeException
+class CookiesDisabledException extends Delivery\Exception
 {
     /** @var GuzzleHttp\ClientInterface */
     protected $client;

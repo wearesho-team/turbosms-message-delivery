@@ -25,9 +25,17 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
     /** @var ClientInterface */
     private $client;
 
+    /**
+     * Service constructor.
+     *
+     * @param ConfigInterface $config
+     * @param ClientInterface $client
+     *
+     * @throws CookiesDisabledException
+     */
     public function __construct(ConfigInterface $config, ClientInterface $client)
     {
-        if (!$this->client->getConfig('cookies')) {
+        if (!$client->getConfig('cookies')) {
             throw new CookiesDisabledException($client, "Parameter 'cookies' must be enabled for guzzle client");
         }
 

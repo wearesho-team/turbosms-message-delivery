@@ -194,6 +194,16 @@ class ServiceTest extends TestCase
         ];
     }
 
+    public function testWithDisabledCookies(): void
+    {
+        $this->expectException(Delivery\TurboSms\CookiesDisabledException::class);
+
+        new Delivery\TurboSms\Service(
+            new Delivery\TurboSms\Config('username', 'password'),
+            new GuzzleHttp\Client(['cookies' => false])
+        );
+    }
+
     protected function mockAuth(): void
     {
         $this->mock->append($this->mockResponse(
