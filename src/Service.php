@@ -27,6 +27,10 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
 
     public function __construct(ConfigInterface $config, ClientInterface $client)
     {
+        if (!$this->client->getConfig('cookies')) {
+            throw new CookiesDisabledException($client, "Parameter 'cookies' must be enabled for guzzle client");
+        }
+
         $this->config = $config;
         $this->client = $client;
         $this->soap = (new AsyncSoap\Guzzle\Factory())->create($client, $config->getUri());
@@ -83,9 +87,9 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
      */
     public function auth(): void
     {
-        $cookieSession = $this->client->getConfig('cookies')->getCookieByName('PHPSESSID');
+        $cookieSession = $this->client->getConfig('cookies');
 
-        if (!is_null($cookieSession)) {
+        if ($cookieSession && $cookieSession->getCookieByName('PHPSESSID')) {
             return;
         }
 
