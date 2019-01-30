@@ -64,11 +64,11 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
         $response = $this->soap->call('SendSMS', [$sms]);
 
         $status = $response->SendSMSResult->ResultArray;
-        if (is_array($status) && !preg_match("/" . static::SEND_SUCCESS . "/", $status[0])) {
+        if (\is_array($status) && !\preg_match("/" . static::SEND_SUCCESS . "/", $status[0])) {
             throw new Delivery\Exception($status[0]);
         }
 
-        if (!is_array($status)) {
+        if (!\is_array($status)) {
             throw new Delivery\Exception($status);
         }
     }
@@ -83,7 +83,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
 
         $response = $this->soap->call('GetCreditBalance', [])->GetCreditBalanceResult;
 
-        if (!is_numeric($response)) {
+        if (!\is_numeric($response)) {
             throw new Delivery\Exception($response);
         }
 
@@ -108,7 +108,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
 
         $result = $this->soap->call('Auth', [$credentials]);
 
-        if (trim($result->AuthResult) !== static::AUTH_SUCCESS) {
+        if (\trim($result->AuthResult) !== static::AUTH_SUCCESS) {
             throw new Delivery\Exception($result->AuthResult);
         }
     }
@@ -120,7 +120,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
      */
     protected function validateRecipient(Delivery\MessageInterface $message): void
     {
-        if (!preg_match('/^\+380\d{9}$/', $message->getRecipient())) {
+        if (!\preg_match('/^\+380\d{9}$/', $message->getRecipient())) {
             throw new Delivery\Exception("Unsupported recipient format");
         }
     }
@@ -137,7 +137,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
             ? $message->getSenderName()
             : $this->config->getSenderName();
 
-        if (mb_strlen($name) > static::SENDER_NAME_MAX_LENGTH) {
+        if (\mb_strlen($name) > static::SENDER_NAME_MAX_LENGTH) {
             throw new Delivery\Exception('Sender name must be equal or less than 11 symbols');
         }
 
