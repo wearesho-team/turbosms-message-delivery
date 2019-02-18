@@ -117,7 +117,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
 
     protected function formatRecipient(string $recipient): string
     {
-        if (!$recipient[0] === '+') {
+        if ($recipient[0] !== '+') {
             $recipient = "+{$recipient}";
         }
 
