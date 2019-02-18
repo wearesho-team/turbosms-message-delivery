@@ -51,13 +51,15 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
      */
     public function send(Delivery\MessageInterface $message): void
     {
-        $this->validateRecipient($message);
+        $recipient = $this->formatRecipient($message->getRecipient());
+        $this->validateRecipient($recipient);
+
         $sender = $this->fetchSenderName($message);
         $this->auth();
 
         $sms = [
             'sender' => $sender,
-            'destination' => $message->getRecipient(),
+            'destination' => $recipient,
             'text' => $message->getText(),
         ];
 
@@ -113,14 +115,23 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
         }
     }
 
+    protected function formatRecipient(string $recipient): string
+    {
+        if (!$recipient[0] === '+') {
+            $recipient = "+{$recipient}";
+        }
+
+        return $recipient;
+    }
+
     /**
-     * @param Delivery\MessageInterface $message
+     * @param string $recipient
      *
      * @throws Delivery\Exception
      */
-    protected function validateRecipient(Delivery\MessageInterface $message): void
+    protected function validateRecipient(string $recipient): void
     {
-        if (!\preg_match('/^\+380\d{9}$/', $message->getRecipient())) {
+        if (!\preg_match('/^\+380\d{9}$/', $recipient)) {
             throw new Delivery\Exception("Unsupported recipient format");
         }
     }
