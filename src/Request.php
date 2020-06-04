@@ -23,9 +23,7 @@ class Request extends GuzzleHttp\Psr7\Request
                 "<ns1:{$key}>" . htmlentities($item, ENT_XML1) . "</ns1:{$key}>"
         );
         $body = implode("", $config);
-        return <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://turbosms.in.ua/api/Turbo"><SOAP-ENV:Body><ns1:{$action}>{$body}</ns1:{$action}></SOAP-ENV:Body></SOAP-ENV:Envelope>
-XML;
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns1=\"http://turbosms.in.ua/api/Turbo\"><SOAP-ENV:Body><ns1:{$action}>{$body}</ns1:{$action}></SOAP-ENV:Body></SOAP-ENV:Envelope>";// phpcs:ignore
     }
 }

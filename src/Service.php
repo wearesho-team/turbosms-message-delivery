@@ -40,7 +40,8 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
         $body = (string)$response->getBody();
         if (!preg_match(
             '/<SOAP-ENV:Body>(?:<ns1:\w+>){2}(.+)(?:<\/ns1:\w+>){2}<\/SOAP-ENV:Body>/m',
-            $body, $matches
+            $body,
+            $matches
         )) {
             return $body;
         }
@@ -81,7 +82,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
         $sender = $this->config->getSenderName();
 
         $response = $this->request('SendSMS', compact('destination', 'text', 'sender'));
-        if (!preg_match_all('/<ns1:ResultArray>(.+)<\/ns1:ResultArray>/U', $response, $matches)) {
+        if (!preg_match_all('/<(?:[a-z0-9]+):ResultArray>(.+)<\/(?:[a-z0-9]+):ResultArray>/U', $response, $matches)) {
             throw new Delivery\Exception($response);
         }
 
@@ -98,6 +99,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
     {
         if (!$message instanceof Delivery\Message\BatchInterface) {
             $this->batch($message->getText(), $message->getRecipient());
+            return;
         }
         while ($message->valid()) {
             $batch[$message->getText()][] = $message->getRecipient();

@@ -10,7 +10,32 @@
 
 ## Installation
 ```bash
-composer require wearsho-team/turbosms-message-delivery
+composer require wearsho-team/turbosms-message-delivery:^1.0.3
+```
+
+## Quick Start
+- Install to your Project
+```bash
+composer require wearsho-team/turbosms-message-delivery:^1.0.3
+```
+- Configure environment
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| TURBOSMS_LOGIN | Yes | Your login to gateway |
+| TURBOSMS_PASSWORD | Yes | Your password to gateway |
+| TURBOSMS_SENDER | no | Sender name, that was declared in your account |
+
+- Use in your code
+```php
+<?php
+use Wearesho\Delivery\Message;
+use Wearesho\Delivery\TurboSms;
+$service = TurboSms\Service::instance();
+$service->auth();
+$service->balance();
+$service->send(new Message("Text", "3809700000000"));
+$service->batch("Text", "3809700000000", "3809700000001"/** etc */);
 ```
 
 ## Usage
@@ -21,18 +46,9 @@ Available implementations:
 - [EnvironmentConfig](./src/EnvironmentConfig.php) - loads configuration values from environment using 
 [getenv](http://php.net/manual/ru/function.getenv.php)
 
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| TURBOSMS_LOGIN | Yes | Your login to gateway |
-| TURBOSMS_PASSWORD | Yes | Your password to gateway |
-| TURBOSMS_SENDER | no | Sender name, that was declared in your account |
-| TURBOSMS_URI | no | Uri to wsdl document |
-
 ### Additional methods
 Besides implementing Delivery\ServiceInterface [Service](./src/Service.php) provides
 
-**Important!** Cookies required enabled on server
 ```php
 <?php
 
