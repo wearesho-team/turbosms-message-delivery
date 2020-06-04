@@ -1,6 +1,6 @@
 <?php
 
-namespace Wearesho\Delivery\TurboSms\Tests\Unit;
+namespace Wearesho\Delivery\TurboSms\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Wearesho\Delivery\TurboSms;
@@ -31,11 +31,6 @@ class ConfigTest extends TestCase
     public function testGetPassword(): void
     {
         $this->assertEquals(static::PASSWORD, $this->fakeConfig->getPassword());
-    }
-
-    public function testGetUri(): void
-    {
-        $this->assertEquals(TurboSms\ConfigInterface::URI, $this->fakeConfig->getUri());
     }
 
     public function testGetSenderName(): void

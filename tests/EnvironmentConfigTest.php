@@ -1,6 +1,6 @@
 <?php
 
-namespace Wearesho\Delivery\TurboSms\Tests\Unit;
+namespace Wearesho\Delivery\TurboSms\Tests;
 
 use Horat1us\Environment\Exception;
 use PHPUnit\Framework\TestCase;
@@ -55,20 +55,6 @@ class EnvironmentConfigTest extends TestCase
         putenv('TURBOSMS_PASSWORD');
 
         $this->fakeConfig->getPassword();
-    }
-
-    public function testSuccessGetUri(): void
-    {
-        putenv('TURBOSMS_URI=' . static::URI);
-
-        $this->assertEquals(static::URI, $this->fakeConfig->getUri());
-    }
-
-    public function testSuccessGetDefaultUri(): void
-    {
-        putenv('TURBOSMS_URI');
-
-        $this->assertEquals(TurboSms\ConfigInterface::URI, $this->fakeConfig->getUri());
     }
 
     public function testSuccessGetSenderName(): void

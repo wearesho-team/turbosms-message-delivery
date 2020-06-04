@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">
-    <env:Body>
-        <s:GetCreditBalanceResponse xmlns:s="http://turbosms.in.ua/api/Turbo">
-            <s:GetCreditBalanceResult>2500.75</s:GetCreditBalanceResult>
-        </s:GetCreditBalanceResponse>
-    </env:Body>
-</env:Envelope>

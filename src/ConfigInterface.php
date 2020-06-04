@@ -16,6 +16,4 @@ interface ConfigInterface
     public function getPassword(): string;
 
     public function getSenderName(): string;
-
-    public function getUri(): string;
 }

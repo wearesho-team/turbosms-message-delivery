@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">
-    <env:Body>
-        <s:AuthResponse xmlns:s="http://turbosms.in.ua/api/Turbo">
-            <s:AuthResult>Ваша учётная запись заблокирована за нарушения, свяжитесь с администрацией</s:AuthResult>
-        </s:AuthResponse>
-    </env:Body>
-</env:Envelope>
