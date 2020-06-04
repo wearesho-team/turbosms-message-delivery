@@ -97,7 +97,7 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
     public function send(Delivery\MessageInterface $message): void
     {
         if (!$message instanceof Delivery\Message\BatchInterface) {
-            $this->batch($message->getText(), ...$message->getRecipient());
+            $this->batch($message->getText(), $message->getRecipient());
         }
         while ($message->valid()) {
             $batch[$message->getText()][] = $message->getRecipient();
