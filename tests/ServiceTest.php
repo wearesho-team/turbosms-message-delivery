@@ -40,8 +40,7 @@ class ServiceTest extends TestCase
             );
             $this->assertContains('PHPSESSID=RANDOMCOOKIE', (array)$request->getHeader('Cookie'));
             // phpcs:ignore
-            return new GuzzleHttp\Psr7\Response(200, [], "<SOAP-ENV:Body><ns1:GetCreditBalance><ns1:GetCreditBalanceResult>1337</ns1:GetCreditBalanceResult></ns1:GetCreditBalance></SOAP-ENV:Body>"
-            );
+            return new GuzzleHttp\Psr7\Response(200, [], "<SOAP-ENV:Body><ns1:GetCreditBalance><ns1:GetCreditBalanceResult>1337</ns1:GetCreditBalanceResult></ns1:GetCreditBalance></SOAP-ENV:Body>");
         });
         $this->assertEquals(new Balance(1337.0, 'UAH'), $client->balance());
     }
