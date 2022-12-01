@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Wearesho\Delivery\TurboSms\Tests;
 
 use GuzzleHttp;
@@ -12,7 +14,7 @@ use Wearesho\Delivery\Message;
 
 class ServiceTest extends TestCase
 {
-    public function testAuth()
+    public function testAuth(): void
     {
         $config = new TurboSms\Config("test", "password");
         $guzzle = $this->getMockForAbstractClass(GuzzleHttp\ClientInterface::class);

@@ -1,22 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Wearesho\Delivery\TurboSms\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Wearesho\Delivery\TurboSms;
 
-/**
- * Class ConfigTest
- * @package Wearesho\Delivery\TurboSms\Tests\Unit
- */
 class ConfigTest extends TestCase
 {
     protected const LOGIN = 'login';
     protected const PASSWORD = 'password';
     protected const SENDER = 'Sender';
 
-    /** @var TurboSms\Config */
-    protected $fakeConfig;
+    protected TurboSms\Config $fakeConfig;
 
     protected function setUp(): void
     {

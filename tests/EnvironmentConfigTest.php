@@ -1,15 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Wearesho\Delivery\TurboSms\Tests;
 
 use Horat1us\Environment\Exception;
 use PHPUnit\Framework\TestCase;
 use Wearesho\Delivery\TurboSms;
 
-/**
- * Class EnvironmentConfigTest
- * @package Wearesho\Delivery\TurboSms\Tests\Unit
- */
 class EnvironmentConfigTest extends TestCase
 {
     protected const LOGIN = 'login';
@@ -17,8 +15,7 @@ class EnvironmentConfigTest extends TestCase
     protected const URI = 'uri';
     protected const SENDER = 'sender';
 
-    /** @var TurboSms\EnvironmentConfig */
-    protected $fakeConfig;
+    protected TurboSms\EnvironmentConfig $fakeConfig;
 
     protected function setUp(): void
     {

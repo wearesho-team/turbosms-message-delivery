@@ -2,23 +2,15 @@
 
 namespace Wearesho\Delivery\TurboSms;
 
-/**
- * Class Config
- * @package Wearesho\Delivery\TurboSms
- */
 class Config implements ConfigInterface
 {
-    /** @var string */
-    protected $login;
+    protected string $login;
 
-    /** @var string */
-    protected $password;
+    protected string $password;
 
-    /** @var string */
-    protected $senderName;
+    protected string $senderName;
 
-    /** @var string */
-    protected $uri;
+    protected string $uri;
 
     public function __construct(
         string $login,

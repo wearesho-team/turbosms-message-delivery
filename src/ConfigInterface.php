@@ -1,11 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Wearesho\Delivery\TurboSms;
 
-/**
- * Interface ConfigInterface
- * @package Wearesho\Delivery\TurboSms
- */
 interface ConfigInterface
 {
     public const URI = 'http://turbosms.in.ua/api/wsdl.html';
