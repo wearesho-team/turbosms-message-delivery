@@ -69,17 +69,25 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
         return new Delivery\Balance(floatval($response), 'UAH');
     }
 
-    public function batch(string $text, string $recipient, ...$recipients): array
+    public function batch(string $text, string|array $recipients, ?array $options = null): array
     {
-        $destination = implode(',', array_map(
-            fn(string $recipient) => preg_replace(
-                '/^\+?(?:38)?0(\d{9})$/',
-                '+380$1',
-                $recipient
-            ),
-            [$recipient, ...$recipients]
-        ));
-        $sender = $this->config->getSenderName();
+        $destination = implode(
+            ',',
+            array_map(
+                fn(string $recipient) => preg_replace(
+                    '/^\+?(?:38)?0(\d{9})$/',
+                    '+380$1',
+                    $recipient
+                ),
+                (array)$recipients
+            )
+        );
+        $sender = (
+            is_array($options)
+            && array_key_exists(Delivery\MessageOptionsInterface::OPTION_SENDER_NAME, $options)
+        )
+            ? $options[Delivery\MessageOptionsInterface::OPTION_SENDER_NAME]
+            : $this->config->getSenderName();
 
         $response = $this->request('SendSMS', compact('destination', 'text', 'sender'));
         if (!preg_match_all('/<(?:[a-z0-9]+):ResultArray>(.+)<\/(?:[a-z0-9]+):ResultArray>/U', $response, $matches)) {
@@ -98,7 +106,11 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
     public function send(Delivery\MessageInterface $message): void
     {
         if (!$message instanceof Delivery\Message\BatchInterface) {
-            $this->batch($message->getText(), $message->getRecipient());
+            $this->batch(
+                text: $message->getText(),
+                recipients: $message->getRecipient(),
+                options: ($message instanceof Delivery\MessageOptionsInterface) ? $message->getOptions() : null
+            );
             return;
         }
         while ($message->valid()) {
@@ -107,7 +119,11 @@ class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
         }
         $message->rewind();
         foreach ($batch as $text => $recipients) {
-            $this->batch($text, ...$recipients);
+            $this->batch(
+                text: $text,
+                recipients: $recipients,
+                options: ($message instanceof Delivery\MessageOptionsInterface) ? $message->getOptions() : null
+            );
             foreach ($recipients as $recipient) {
                 $message->next(
                     new Delivery\HistoryItem(

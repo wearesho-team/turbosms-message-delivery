@@ -29,12 +29,16 @@ composer require wearsho-team/turbosms-message-delivery:^1.0.3
 ```php
 <?php
 use Wearesho\Delivery\Message;
+use Wearesho\Delivery\MessageOptionsInterface;
 use Wearesho\Delivery\TurboSms;
 $service = TurboSms\Service::instance();
 $service->auth();
 $service->balance();
 $service->send(new Message("Text", "3809700000000"));
-$service->batch("Text", "3809700000000", "3809700000001"/** etc */);
+$service->batch("Text", ["3809700000000", "3809700000001"]);
+$service->batch("Text", "3809700000001", [
+    MessageOptionsInterface::OPTION_SENDER_NAME => "customSenderName",
+]);
 ```
 
 ## Usage
@@ -89,6 +93,7 @@ $message = (string)$balance; // will output "{amount} Credits"
 
 ## Authors
 - [Roman <KartaviK> Varkuta](mailto:roman.varkuta@gmail.com)
+- [Oleksander Letnikov](mailto:reclamme@gmail.com)
 
 ## License
 [MIT](./LICENSE)
