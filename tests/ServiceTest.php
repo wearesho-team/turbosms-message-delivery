@@ -51,7 +51,7 @@ class ServiceTest extends TestCase
     {
         $client = $this->createPartialMock(TurboSms\Service::class, ['batch']);
         $client->expects($this->once())->method('batch')
-            ->with('Text', '380000000000', '380000000001', '380000000002');
+            ->with('Text', ['380000000000', '380000000001', '380000000002']);
         $batch = Batch::create('Text', ...array_map(
             fn($i) => '38000000000' . $i,
             range(0, 2)
