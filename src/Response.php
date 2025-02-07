@@ -30,7 +30,7 @@ class Response
     public function __construct(
         public readonly int    $code,
         public readonly string $status,
-        public readonly array  $result
+        public readonly ?array  $result = null
     ) {
     }
 
