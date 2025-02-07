@@ -28,9 +28,9 @@ class Response
     ];
 
     public function __construct(
-        public readonly int    $code,
+        public readonly int $code,
         public readonly string $status,
-        public readonly ?array  $result = null
+        public readonly ?array $result = null
     ) {
     }
 
@@ -44,10 +44,10 @@ class Response
      * @return self
      * @throws ResponseException
      */
-    public function parse(string $response): self
+    public static function parse(string $response): self
     {
-        $responseData = $this->parseRawResponse($response);
-        $this->validateArrayResponse($responseData);
+        $responseData = static::parseRawResponse($response);
+        static::validateArrayResponse($responseData);
         return new self(
             $responseData[self::RESPONSE_KEY_CODE],
             $responseData[self::RESPONSE_KEY_STATUS],
@@ -55,7 +55,7 @@ class Response
         );
     }
 
-    private function parseRawResponse(string $response): array
+    private static function parseRawResponse(string $response): array
     {
         try {
             return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
@@ -68,7 +68,7 @@ class Response
         }
     }
 
-    protected function validateArrayResponse(array $responseData): void
+    protected static function validateArrayResponse(array $responseData): void
     {
         $missingKeys = array_diff(
             array_keys(self::$exceptionMap),
