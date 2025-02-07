@@ -6,7 +6,6 @@ namespace Wearesho\Delivery\TurboSms;
 
 class ResponseException extends Exception
 {
-
     public const STATUS_INVALID_JSON = 'InvalidJson';
     public const CODE_INVALID_JSON = -1;
 
