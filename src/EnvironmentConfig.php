@@ -13,19 +13,9 @@ class EnvironmentConfig extends Environment\Config implements ConfigInterface
         parent::__construct($keyPrefix);
     }
 
-    public function getLogin(): string
+    public function getHttpToken(): string
     {
-        return $this->getEnv('LOGIN');
-    }
-
-    public function getPassword(): string
-    {
-        return $this->getEnv('PASSWORD');
-    }
-
-    public function getUri(): string
-    {
-        return $this->getEnv('URI', ConfigInterface::URI);
+        return $this->getEnv('HTTP_TOKEN');
     }
 
     public function getSenderName(): string

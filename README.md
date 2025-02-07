@@ -9,21 +9,20 @@
 
 ## Installation
 ```bash
-composer require wearsho-team/turbosms-message-delivery:^1.0.3
+composer require wearsho-team/turbosms-message-delivery:^3.0
 ```
 
 ## Quick Start
 - Install to your Project
 ```bash
-composer require wearsho-team/turbosms-message-delivery:^1.0.3
+composer require wearsho-team/turbosms-message-delivery:^3.0
 ```
 - Configure environment
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| TURBOSMS_LOGIN | Yes | Your login to gateway |
-| TURBOSMS_PASSWORD | Yes | Your password to gateway |
-| TURBOSMS_SENDER | no | Sender name, that was declared in your account |
+| Variable            | Required | Description                                    |
+|---------------------|----------|------------------------------------------------|
+| TURBOSMS_HTTP_TOKEN | Yes | HTTP API Token                                 |
+| TURBOSMS_SENDER     | no | Sender name, that was declared in your account |
 
 - Use in your code
 ```php
@@ -58,8 +57,7 @@ Besides implementing Delivery\ServiceInterface [Service](./src/Service.php) prov
 use Wearesho\Delivery;
 
 $service = new Delivery\TurboSms\Service(
-    new Delivery\TurboSms\Config('login', 'password'),
-    new GuzzleHttp\Client(['cookies' => true])
+    new Delivery\TurboSms\Config('httpToken', 'senderName (alpha name)'),
 );
 ```
 

@@ -4,39 +4,15 @@ namespace Wearesho\Delivery\TurboSms;
 
 class Config implements ConfigInterface
 {
-    protected string $login;
-
-    protected string $password;
-
-    protected string $senderName;
-
-    protected string $uri;
-
     public function __construct(
-        string $login,
-        string $password,
-        string $sender = ConfigInterface::SENDER,
-        string $uri = ConfigInterface::URI
+        protected readonly string $httpToken,
+        protected readonly string $senderName = ConfigInterface::SENDER,
     ) {
-        $this->login = $login;
-        $this->password = $password;
-        $this->senderName = $sender;
-        $this->uri = $uri;
     }
 
-    public function getLogin(): string
+    public function getHttpToken(): string
     {
-        return $this->login;
-    }
-
-    public function getPassword(): string
-    {
-        return $this->password;
-    }
-
-    public function getUri(): string
-    {
-        return $this->uri;
+        return $this->httpToken;
     }
 
     public function getSenderName(): string
