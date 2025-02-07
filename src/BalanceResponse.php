@@ -12,10 +12,12 @@ class BalanceResponse extends Response implements Delivery\BalanceInterface
 
     private const RESPONSE_KEY_RESULT_BALANCE = 'balance';
 
-    public function __construct(int $code, string $status, array $result)
+    public function __construct(int $code, string $status, ?array $result = null)
     {
         parent::__construct($code, $status, $result);
-        $this->balance = $this->isSuccess() ? $result[self::RESPONSE_KEY_RESULT_BALANCE] : 0;
+        $this->balance = ($this->isSuccess() && is_array($result))
+            ? $result[self::RESPONSE_KEY_RESULT_BALANCE]
+            : 0;
     }
 
     public function getAmount(): float
