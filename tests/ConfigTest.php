@@ -9,25 +9,19 @@ use Wearesho\Delivery\TurboSms;
 
 class ConfigTest extends TestCase
 {
-    protected const LOGIN = 'login';
-    protected const PASSWORD = 'password';
+    protected const HTTP_TOKEN = 'login';
     protected const SENDER = 'Sender';
 
     protected TurboSms\Config $fakeConfig;
 
     protected function setUp(): void
     {
-        $this->fakeConfig = new TurboSms\Config(static::LOGIN, static::PASSWORD, static::SENDER);
+        $this->fakeConfig = new TurboSms\Config(static::HTTP_TOKEN, static::SENDER);
     }
 
-    public function testGetLogin(): void
+    public function testGetHttpToken(): void
     {
-        $this->assertEquals(static::LOGIN, $this->fakeConfig->getLogin());
-    }
-
-    public function testGetPassword(): void
-    {
-        $this->assertEquals(static::PASSWORD, $this->fakeConfig->getPassword());
+        $this->assertEquals(static::HTTP_TOKEN, $this->fakeConfig->getHttpToken());
     }
 
     public function testGetSenderName(): void

@@ -10,9 +10,7 @@ use Wearesho\Delivery\TurboSms;
 
 class EnvironmentConfigTest extends TestCase
 {
-    protected const LOGIN = 'login';
-    protected const PASSWORD = 'password';
-    protected const URI = 'uri';
+    protected const HTTP_TOKEN = 'httpToken';
     protected const SENDER = 'sender';
 
     protected TurboSms\EnvironmentConfig $fakeConfig;
@@ -22,36 +20,20 @@ class EnvironmentConfigTest extends TestCase
         $this->fakeConfig = new TurboSms\EnvironmentConfig();
     }
 
-    public function testSuccessGetLogin(): void
-    {
-        putenv('TURBOSMS_LOGIN=' . static::LOGIN);
-
-        $this->assertEquals(static::LOGIN, $this->fakeConfig->getLogin());
-    }
-
-    public function testFailedGetLogin(): void
-    {
-        $this->expectException(Exception\Missing::class);
-
-        putenv('TURBOSMS_LOGIN');
-
-        $this->fakeConfig->getLogin();
-    }
-
     public function testSuccessGetPassword(): void
     {
-        putenv('TURBOSMS_PASSWORD=' . static::PASSWORD);
+        putenv('TURBOSMS_HTTP_TOKEN=' . static::HTTP_TOKEN);
 
-        $this->assertEquals(static::PASSWORD, $this->fakeConfig->getPassword());
+        $this->assertEquals(static::HTTP_TOKEN, $this->fakeConfig->getHttpToken());
     }
 
     public function testFailedGetPassword(): void
     {
         $this->expectException(Exception\Missing::class);
 
-        putenv('TURBOSMS_PASSWORD');
+        putenv('TURBOSMS_HTTP_TOKEN');
 
-        $this->fakeConfig->getPassword();
+        $this->fakeConfig->getHttpToken();
     }
 
     public function testSuccessGetSenderName(): void
