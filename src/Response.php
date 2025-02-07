@@ -41,14 +41,14 @@ class Response
 
     /**
      * @param string $response
-     * @return self
+     * @return static
      * @throws ResponseException
      */
-    public static function parse(string $response): self
+    public static function parse(string $response): static
     {
         $responseData = static::parseRawResponse($response);
         static::validateArrayResponse($responseData);
-        return new self(
+        return new static(
             $responseData[self::RESPONSE_KEY_CODE],
             $responseData[self::RESPONSE_KEY_STATUS],
             $responseData[self::RESPONSE_KEY_RESULT]
