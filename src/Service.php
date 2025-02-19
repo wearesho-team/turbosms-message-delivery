@@ -1,138 +1,207 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Wearesho\Delivery\TurboSms;
 
 use GuzzleHttp;
 use Wearesho\Delivery;
 
-class Service implements Delivery\ServiceInterface, Delivery\CheckBalance
+class Service implements Delivery\Batch\ServiceInterface
 {
-    private ConfigInterface $config;
-    private GuzzleHttp\ClientInterface $client;
+    public const NAME = 'turbosms';
 
-    private GuzzleHttp\Cookie\CookieJar $cookies;
+    public const CHANNEL_SMS = 'sms';
+    public const CHANNEL_VIBER = 'viber';
 
-    public function __construct(GuzzleHttp\ClientInterface $client, ConfigInterface $config)
+    private const BASE_URL = 'https://api.turbosms.ua/';
+
+    private const ENDPOINT_USER_BALANCE = 'user/balance.json';
+    private const ENDPOINT_MESSAGE_SEND = 'message/send.json';
+    private const ENDPOINT_MESSAGE_SEND_MULTI = 'message/sendmulti.json';
+
+    private static array $availableChannels = [
+        self::CHANNEL_SMS,
+        self::CHANNEL_VIBER,
+    ];
+
+    public function __construct(
+        private readonly GuzzleHttp\ClientInterface $client,
+        private readonly ConfigInterface            $config
+    )
     {
-        $this->client = $client;
-        $this->config = $config;
-
-        $this->cookies = new GuzzleHttp\Cookie\CookieJar;
     }
 
     public static function instance(): self
     {
         static $instance;
         if (!$instance) {
-            $instance = new self(new GuzzleHttp\Client, new EnvironmentConfig);
+            $instance = new self(new GuzzleHttp\Client(), new EnvironmentConfig());
         }
         return $instance;
     }
 
-    protected function request(string $action, array $config = [])
+    public function name(): string
     {
-        if ($this->cookies->count() === 0 && $action !== 'Auth') {
-            $this->auth();
-        }
-        $request = $this->cookies->withCookieHeader(new Request($action, $config));
-        $response = $this->client->send($request);
-        $this->cookies->extractCookies($request, $response);
-        $body = (string)$response->getBody();
-        if (!preg_match(
-            '/<SOAP-ENV:Body>(?:<ns1:\w+>){2}(.+)(?:<\/ns1:\w+>){2}<\/SOAP-ENV:Body>/m',
-            $body,
-            $matches
-        )) {
-            return $body;
-        }
-        return $matches[1];
+        return static::NAME;
     }
 
-    public function auth(): string
+    /**
+     * @throws Delivery\Exception
+     */
+    public function balance(): Delivery\BalanceInterface
     {
-        $response = $this->request(
-            'Auth',
-            ['login' => $this->config->getLogin(), 'password' => $this->config->getPassword()]
+        $response = BalanceResponse::parse(
+            $this->request(self::ENDPOINT_USER_BALANCE)
         );
-        if ($response !== 'Вы успешно авторизировались') {
-            throw new Delivery\Exception($response);
+        if (!$response->isSuccess()) {
+            throw new Exception($response->status, $response->code);
         }
         return $response;
     }
 
-    public function balance(): Delivery\BalanceInterface
+    public function batch(iterable $messages): iterable
     {
-        $response = $this->request('GetCreditBalance');
-        if (!is_numeric($response)) {
-            throw new Delivery\Exception($response);
+        $messagesArray = [];
+        $requests = [];
+        $i = 0;
+        $time = time();
+        foreach ($messages as $message) {
+            $key = "i_" . $time . '_' . $i++;
+            $messagesArray[$key] = $message;
+            $requests[$key] = $this->getRequestBody($message);
         }
-        return new Delivery\Balance(floatval($response), 'UAH');
-    }
 
-    public function batch(string $text, string|array $recipients, ?array $options = null): array
-    {
-        $destination = implode(
-            ',',
-            array_map(
-                fn(string $recipient) => preg_replace(
-                    '/^\+?(?:38)?0(\d{9})$/',
-                    '+380$1',
-                    $recipient
-                ),
-                (array)$recipients
-            )
+        $response = Response::parse(
+            $this->request(self::ENDPOINT_MESSAGE_SEND_MULTI, $requests)
         );
-        $sender = (
-            is_array($options)
-            && array_key_exists(Delivery\MessageOptionsInterface::OPTION_SENDER_NAME, $options)
-        )
-            ? $options[Delivery\MessageOptionsInterface::OPTION_SENDER_NAME]
-            : $this->config->getSenderName();
 
-        $response = $this->request('SendSMS', compact('destination', 'text', 'sender'));
-        if (!preg_match_all('/<(?:[a-z0-9]+):ResultArray>(.+)<\/(?:[a-z0-9]+):ResultArray>/U', $response, $matches)) {
-            throw new Delivery\Exception($response);
+        if (empty($response->result)) {
+            throw new Delivery\Exception(
+                "Failed to get result for multi request with status " . $response->status,
+                $response->code
+            );
         }
 
-        $status = array_shift($matches[1]);
-        if (!str_contains($status, 'Не удалось отправить сообщение на некоторые номера')
-            && !str_contains($status, 'Сообщения успешно отправлены')) {
-            throw new Delivery\Exception($status);
+        if (!$response->isSuccess()) {
+            throw new Exception($response->status, $response->code);
         }
 
-        return $matches[1];
+        foreach ($response->result as $resultKey => $resultItem) {
+            $responseItem = Response::fromArray($resultItem);
+            if (empty($responseItem->result)) {
+                throw new Exception($responseItem->status, $responseItem->code);
+            }
+            $responseResultItem = $responseItem->result[array_key_first($responseItem->result)];
+            $messageId = $responseResultItem['message_id'] ?? $resultKey;
+            $reason = $responseResultItem['response_status'] ?? null;
+            yield new Delivery\Result(
+                messageId: $messageId,
+                message: $messagesArray[$resultKey],
+                status: $responseItem->isSuccess() ? Delivery\Result\Status::Accepted : Delivery\Result\Status::Failed,
+                reason: $reason,
+            );
+        }
     }
 
-    public function send(Delivery\MessageInterface $message): void
+    public function send(Delivery\MessageInterface $message): Delivery\ResultInterface
     {
-        if (!$message instanceof Delivery\Message\BatchInterface) {
-            $this->batch(
-                text: $message->getText(),
-                recipients: $message->getRecipient(),
-                options: ($message instanceof Delivery\MessageOptionsInterface) ? $message->getOptions() : null
+        $request = $this->getRequestBody($message);
+        $response = Response::parse(
+            $this->request(self::ENDPOINT_MESSAGE_SEND, $request)
+        );
+
+        if (empty($response->result)) {
+            throw new Delivery\Exception(
+                "Failed to get messageId (result empty) with status " . $response->status,
+                $response->code
             );
-            return;
         }
-        while ($message->valid()) {
-            $batch[$message->getText()][] = $message->getRecipient();
-            $message->next();
-        }
-        $message->rewind();
-        foreach ($batch as $text => $recipients) {
-            $this->batch(
-                text: $text,
-                recipients: $recipients,
-                options: ($message instanceof Delivery\MessageOptionsInterface) ? $message->getOptions() : null
+
+        $result = $response->result[array_key_first($response->result)];
+        if (!array_key_exists('message_id', $result)) {
+            throw new Delivery\Exception(
+                "Failed to get messageId (key not found) with status " . $response->status,
+                $response->code
             );
-            foreach ($recipients as $recipient) {
-                $message->next(
-                    new Delivery\HistoryItem(
-                        new Delivery\Message($text, $recipient),
-                        static::class,
-                        true
-                    )
-                );
+        }
+        if ($response->isSuccess()) {
+            return new Delivery\Result(
+                messageId: $result['message_id'],
+                message: $message,
+                status: Delivery\Result\Status::Accepted,
+                reason: $result['response_status'],
+            );
+        }
+        return new Delivery\Result(
+            messageId: $result['message_id'],
+            message: $message,
+            status: Delivery\Result\Status::Failed,
+            reason: $result['response_status'],
+        );
+    }
+
+    protected function getRequestBody(Delivery\MessageInterface $message): array
+    {
+        $senderName = $this->config->getSenderName();
+        $channels = [static::CHANNEL_SMS];
+
+        $messageSenderName = Delivery\Options::get($message, Delivery\Options::SENDER_NAME);
+        if (!empty($messageSenderName)) {
+            $senderName = $messageSenderName;
+        }
+        $messageChannel = Delivery\Options::get($message, Delivery\Options::CHANNEL);
+        if (!empty($messageChannel)) {
+            $channels = $this->validateChannelName($messageChannel);
+        }
+        $requestMessage = [
+            'sender' => $senderName,
+            'text' => $message->getText(),
+        ];
+        $request = [
+            'recipients' => [
+                $message->getRecipient(),
+            ],
+        ];
+        foreach ($channels as $channel) {
+            $request[$channel] = $requestMessage;
+        }
+
+        return $request;
+    }
+
+    protected function request(string $endpoint, ?array $data = null): string
+    {
+        $requestOptions = [
+            GuzzleHttp\RequestOptions::HEADERS => [
+                'Authorization' => 'Basic ' . $this->config->getHttpToken(),
+            ]
+        ];
+        if (!empty($data)) {
+            $requestOptions[GuzzleHttp\RequestOptions::JSON] = $data;
+        }
+
+        try {
+            $response = $this->client->request(
+                'POST',
+                static::BASE_URL . rtrim($endpoint, '/'),
+                $requestOptions
+            );
+        } catch (GuzzleHttp\Exception\GuzzleException $e) {
+            throw new Delivery\Exception($e->getMessage(), $e->getCode(), $e);
+        }
+
+        return $response->getBody()->__toString();
+    }
+
+    protected function validateChannelName(string|array $value): array
+    {
+        foreach ((array)$value as $channelName) {
+            if (!in_array($channelName, self::$availableChannels)) {
+                throw new Delivery\Exception("Unsupported channel: " . $channelName);
             }
         }
+
+        return (array)$value;
     }
 }

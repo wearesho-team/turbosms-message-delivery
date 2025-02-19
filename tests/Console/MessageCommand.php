@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
+use Wearesho\Delivery;
 
 class MessageCommand extends Command
 {
@@ -20,20 +21,33 @@ class MessageCommand extends Command
     protected function configure(): void
     {
         parent::configure();
+        $this->setDescription("TurboSMS Send message");
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         parent::execute($input, $output);
-        $response = $this->client->send($this->text, ...$this->recipients);
-        $t = new Table($output);
-        $t->addRows(array_map(
-            fn($cell) => [array_shift($this->recipients), $cell],
-            $response
-        ));
-        $t->setHeaders(['Phone', 'UUID']);
-        $t->render();
+
+        $messages = array_map(
+            fn(string $recipient): Delivery\Message => new Delivery\Message(
+                $this->text,
+                $recipient
+            ),
+            $this->recipients
+        );
+        foreach ($this->client->batch($messages) as $result) {
+            $this->writeResult($output, $result);
+        }
+
         return static::SUCCESS;
+    }
+
+    protected function writeResult(OutputInterface $output, Delivery\ResultInterface $result): void
+    {
+        $output->writeln("> Recipient: " . $result->message()->getRecipient());
+        $output->writeln("Status: " . $result->status()->value);
+        $output->writeln("ID: " . $result->messageId());
+        $output->writeln("Reason: " . $result->reason());
     }
 
     protected function interact(InputInterface $input, OutputInterface $output)

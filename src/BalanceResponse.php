@@ -6,7 +6,7 @@ namespace Wearesho\Delivery\TurboSms;
 
 use Wearesho\Delivery;
 
-class BalanceResponse extends Response implements Delivery\BalanceInterface
+class BalanceResponse extends Response implements Delivery\BalanceInterface, \Stringable
 {
     private readonly float $balance;
 
@@ -42,5 +42,11 @@ class BalanceResponse extends Response implements Delivery\BalanceInterface
                 ResponseException::CODE_MISSING_FIELD_RESULT_BALANCE
             );
         }
+    }
+
+    public function __toString(): string
+    {
+        return number_format($this->balance, 2, '.', '')
+            . ' ' . $this->getCurrency();
     }
 }
