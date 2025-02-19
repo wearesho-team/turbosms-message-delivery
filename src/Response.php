@@ -7,6 +7,11 @@ namespace Wearesho\Delivery\TurboSms;
 class Response
 {
     public const CODE_SUCCESS = 0;
+    public const CODE_PONG = 1;
+    public const CODE_SUCCESS_MESSAGE_ACCEPTED = 0;
+    public const CODE_SUCCESS_MESSAGE_SENT = 801;
+    public const CODE_SUCCESS_MESSAGE_PARTIAL_ACCEPTED = 802;
+    public const CODE_SUCCESS_MESSAGE_PARTIAL_SENT = 803;
 
     protected const RESPONSE_KEY_CODE = 'response_code';
     protected const RESPONSE_KEY_STATUS = 'response_status';
@@ -24,7 +29,16 @@ class Response
         self::RESPONSE_KEY_RESULT => [
             ResponseException::STATUS_MISSING_FIELD_RESULT,
             ResponseException::CODE_MISSING_FIELD_RESULT
-        ]
+        ],
+    ];
+
+    private static array $successCodes = [
+        self::CODE_SUCCESS,
+        self::CODE_PONG,
+        self::CODE_SUCCESS_MESSAGE_ACCEPTED,
+        self::CODE_SUCCESS_MESSAGE_SENT,
+        self::CODE_SUCCESS_MESSAGE_PARTIAL_ACCEPTED,
+        self::CODE_SUCCESS_MESSAGE_PARTIAL_SENT,
     ];
 
     public function __construct(
@@ -36,7 +50,7 @@ class Response
 
     public function isSuccess(): bool
     {
-        return $this->code === self::CODE_SUCCESS;
+        return in_array($this->code, self::$successCodes, true);
     }
 
     /**
@@ -47,6 +61,11 @@ class Response
     public static function parse(string $response): static
     {
         $responseData = static::parseRawResponse($response);
+        return static::fromArray($responseData);
+    }
+
+    public static function fromArray(array $responseData): static
+    {
         static::validateArrayResponse($responseData);
         return new static(
             $responseData[self::RESPONSE_KEY_CODE],
@@ -77,7 +96,7 @@ class Response
 
         if (!empty($missingKeys)) {
             throw new ResponseException(
-                ...self::$exceptionMap[array_key_first($missingKeys)]
+                ...self::$exceptionMap[reset($missingKeys)]
             );
         }
     }
