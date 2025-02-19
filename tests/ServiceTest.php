@@ -100,10 +100,9 @@ class ServiceTest extends TestCase
      */
     public function testBalance(
         \Psr\Http\Message\ResponseInterface $response,
-        ?TurboSms\BalanceResponse           $expectedResponse = null,
-        ?Delivery\Exception                 $expectedException = null,
-    ): void
-    {
+        ?TurboSms\BalanceResponse $expectedResponse = null,
+        ?Delivery\Exception $expectedException = null,
+    ): void {
         $config = new TurboSms\Config($httpToken = (string)time());
 
         $client = $this->createMock(GuzzleHttp\Client::class);

@@ -27,9 +27,8 @@ class Service implements Delivery\Batch\ServiceInterface
 
     public function __construct(
         private readonly GuzzleHttp\ClientInterface $client,
-        private readonly ConfigInterface            $config
-    )
-    {
+        private readonly ConfigInterface $config
+    ) {
     }
 
     public static function instance(): self
