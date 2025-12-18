@@ -165,6 +165,12 @@ class Service implements Delivery\Batch\ServiceInterface
         foreach ($channels as $channel) {
             $request[$channel] = $requestMessage;
         }
+        if (in_array(self::CHANNEL_VIBER, $channels)) {
+            $viberOptions = $this->mapViberRequestOptions($message);
+            if (!empty($viberOptions)) {
+                $request[self::CHANNEL_VIBER] = $viberOptions;
+            }
+        }
 
         return $request;
     }
@@ -202,5 +208,18 @@ class Service implements Delivery\Batch\ServiceInterface
         }
 
         return (array)$value;
+    }
+
+    protected function mapViberRequestOptions(Delivery\MessageInterface $message): array
+    {
+        $options = [];
+        foreach (ViberOptions::cases() as $viberOption) {
+            $optionValue = Delivery\Options::get($message, $viberOption->value);
+            if (empty($optionValue)) {
+                continue;
+            }
+            $options[$viberOption->getRequestParameter()] = $optionValue;
+        }
+        return $options;
     }
 }
