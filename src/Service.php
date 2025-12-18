@@ -168,7 +168,7 @@ class Service implements Delivery\Batch\ServiceInterface
         if (in_array(self::CHANNEL_VIBER, $channels)) {
             $viberOptions = $this->mapViberRequestOptions($message);
             if (!empty($viberOptions)) {
-                $request[self::CHANNEL_VIBER] = $viberOptions;
+                $request[self::CHANNEL_VIBER] = array_merge($request[self::CHANNEL_VIBER], $viberOptions);
             }
         }
 
