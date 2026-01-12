@@ -22,4 +22,9 @@ class EnvironmentConfig extends Environment\Config implements ConfigInterface
     {
         return $this->getEnv('SENDER', ConfigInterface::SENDER);
     }
+
+    public function getViberSenderName(): ?string
+    {
+        return $this->getEnv('VIBER_SENDER', [$this, 'null']);
+    }
 }

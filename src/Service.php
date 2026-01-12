@@ -166,6 +166,14 @@ class Service implements Delivery\Batch\ServiceInterface
             $request[$channel] = $requestMessage;
         }
         if (in_array(self::CHANNEL_VIBER, $channels)) {
+            // Apply Viber-specific sender name
+            if (empty($messageSenderName)) {
+                $viberSenderName = $this->config->getViberSenderName();
+                if (!empty($viberSenderName)) {
+                    $request[self::CHANNEL_VIBER]['sender'] = $viberSenderName;
+                }
+            }
+
             $viberOptions = $this->mapViberRequestOptions($message);
             if (!empty($viberOptions)) {
                 $request[self::CHANNEL_VIBER] = array_merge($request[self::CHANNEL_VIBER], $viberOptions);

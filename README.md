@@ -19,10 +19,11 @@ composer require wearsho-team/turbosms-message-delivery:^3.0
 ```
 - Configure environment
 
-| Variable            | Required | Description                                    |
-|---------------------|----------|------------------------------------------------|
-| TURBOSMS_HTTP_TOKEN | Yes | HTTP API Token                                 |
-| TURBOSMS_SENDER     | no | Sender name, that was declared in your account |
+| Variable              | Required | Description                                    |
+|-----------------------|----------|------------------------------------------------|
+| TURBOSMS_HTTP_TOKEN   | Yes      | HTTP API Token                                 |
+| TURBOSMS_SENDER       | no       | Sender name, that was declared in your account |
+| TURBOSMS_VIBER_SENDER | no       | Viber-specific sender name (optional)          |
 
 - Use in your code
 ```php
@@ -87,6 +88,50 @@ $balance->getAmount();
 $balance->getCurrency();
 
 $message = (string)$balance; // will output "{amount} Credits"
+```
+
+### Sender Name Configuration
+
+The library supports different sender names for SMS and Viber channels:
+
+#### Priority Order (highest to lowest):
+1. **Message-level sender** - Set via options, applies to all channels
+2. **Viber-specific sender** - Set via config for Viber channel only
+3. **Default sender** - Fallback for all channels
+
+#### Example with Separate Viber Sender:
+
+```php
+<?php
+use Wearesho\Delivery;
+use Wearesho\Delivery\TurboSms;
+
+// Configuration
+$config = new TurboSms\Config(
+    httpToken: 'your-token',
+    senderName: 'SmsSender',
+    viberSenderName: 'ViberSender'
+);
+
+$service = new TurboSms\Service(new GuzzleHttp\Client(), $config);
+
+// SMS uses 'SmsSender', Viber uses 'ViberSender'
+$service->send(new Delivery\Message('Multi text', '+380970000000', [
+    'channel' => ['sms', 'viber']
+]));
+
+// Message-level override: both channels use 'CustomSender'
+$service->send(new Delivery\Message('Override text', '+380970000000', [
+    'channel' => ['sms', 'viber'],
+    'senderName' => 'CustomSender'
+]));
+```
+
+#### Environment Configuration:
+```bash
+TURBOSMS_HTTP_TOKEN=your-token
+TURBOSMS_SENDER=SmsSender
+TURBOSMS_VIBER_SENDER=ViberSender
 ```
 
 ## Authors

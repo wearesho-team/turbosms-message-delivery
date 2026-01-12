@@ -49,4 +49,28 @@ class EnvironmentConfigTest extends TestCase
 
         $this->assertEquals(TurboSms\ConfigInterface::SENDER, $this->fakeConfig->getSenderName());
     }
+
+    public function testGetViberSenderNameWhenSet(): void
+    {
+        putenv('TURBOSMS_VIBER_SENDER=ViberSender');
+
+        $this->assertEquals('ViberSender', $this->fakeConfig->getViberSenderName());
+    }
+
+    public function testGetViberSenderNameWhenNotSet(): void
+    {
+        putenv('TURBOSMS_VIBER_SENDER');
+
+        $this->assertNull($this->fakeConfig->getViberSenderName());
+    }
+
+    public function testGetViberSenderNameDoesNotUseDefaultSender(): void
+    {
+        putenv('TURBOSMS_SENDER=DefaultSender');
+        putenv('TURBOSMS_VIBER_SENDER');
+
+        // Viber sender should be null even if default sender is set
+        $this->assertNull($this->fakeConfig->getViberSenderName());
+        $this->assertEquals('DefaultSender', $this->fakeConfig->getSenderName());
+    }
 }

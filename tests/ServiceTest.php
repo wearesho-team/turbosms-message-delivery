@@ -435,4 +435,128 @@ class ServiceTest extends TestCase
             $this->assertInstanceOf(Delivery\ResultInterface::class, $result);
         }
     }
+
+    public function viberSenderNameDataProvider(): array
+    {
+        return [
+            'viber with config viber sender' => [
+                'configDefaultSender' => 'DefaultSender',
+                'configViberSender' => 'ViberSender',
+                'messageSender' => null,
+                'channel' => 'viber',
+                'expectedSenders' => [
+                    'viber' => 'ViberSender',
+                ],
+            ],
+            'viber without config viber sender falls back to default' => [
+                'configDefaultSender' => 'DefaultSender',
+                'configViberSender' => null,
+                'messageSender' => null,
+                'channel' => 'viber',
+                'expectedSenders' => [
+                    'viber' => 'DefaultSender',
+                ],
+            ],
+            'viber with message-level override ignores config viber sender' => [
+                'configDefaultSender' => 'DefaultSender',
+                'configViberSender' => 'ViberSender',
+                'messageSender' => 'MessageSender',
+                'channel' => 'viber',
+                'expectedSenders' => [
+                    'viber' => 'MessageSender',
+                ],
+            ],
+            'sms ignores config viber sender' => [
+                'configDefaultSender' => 'DefaultSender',
+                'configViberSender' => 'ViberSender',
+                'messageSender' => null,
+                'channel' => 'sms',
+                'expectedSenders' => [
+                    'sms' => 'DefaultSender',
+                ],
+            ],
+            'multi-channel uses different senders' => [
+                'configDefaultSender' => 'DefaultSender',
+                'configViberSender' => 'ViberSender',
+                'messageSender' => null,
+                'channel' => ['sms', 'viber'],
+                'expectedSenders' => [
+                    'sms' => 'DefaultSender',
+                    'viber' => 'ViberSender',
+                ],
+            ],
+            'multi-channel with message override uses same sender for both' => [
+                'configDefaultSender' => 'DefaultSender',
+                'configViberSender' => 'ViberSender',
+                'messageSender' => 'MessageSender',
+                'channel' => ['sms', 'viber'],
+                'expectedSenders' => [
+                    'sms' => 'MessageSender',
+                    'viber' => 'MessageSender',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider viberSenderNameDataProvider
+     */
+    public function testViberSenderNamePriority(
+        string $configDefaultSender,
+        ?string $configViberSender,
+        ?string $messageSender,
+        string|array $channel,
+        array $expectedSenders
+    ): void {
+        $config = new TurboSms\Config('httpToken', $configDefaultSender, $configViberSender);
+
+        $client = $this->createMock(GuzzleHttp\Client::class);
+        $client->expects($this->once())
+            ->method('request')
+            ->with(
+                'POST',
+                $this->stringContains('message/send.json'),
+                $this->callback(function ($options) use ($expectedSenders) {
+                    $this->assertArrayHasKey(GuzzleHttp\RequestOptions::JSON, $options);
+                    $actualRequest = $options[GuzzleHttp\RequestOptions::JSON];
+
+                    foreach ($expectedSenders as $channelName => $expectedSender) {
+                        $this->assertArrayHasKey($channelName, $actualRequest);
+                        $this->assertEquals(
+                            $expectedSender,
+                            $actualRequest[$channelName]['sender'],
+                            "Sender for $channelName channel should be $expectedSender"
+                        );
+                    }
+
+                    return true;
+                })
+            )
+            ->willReturn(new GuzzleHttp\Psr7\Response(200, [], '{
+                "response_code": 0,
+                "response_status": "OK",
+                "response_result": {
+                    "+380970000000": {
+                        "message_id": "test-id",
+                        "response_status": "OK"
+                    }
+                }
+            }'));
+
+        $service = new TurboSms\Service($client, $config);
+
+        $messageOptions = ['channel' => $channel];
+        if ($messageSender !== null) {
+            $messageOptions['senderName'] = $messageSender;
+        }
+
+        $message = new Delivery\Message(
+            'Test message',
+            '+380970000000',
+            $messageOptions
+        );
+
+        $result = $service->send($message);
+        $this->assertInstanceOf(Delivery\ResultInterface::class, $result);
+    }
 }

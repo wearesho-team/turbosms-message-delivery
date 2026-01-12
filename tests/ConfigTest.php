@@ -28,4 +28,22 @@ class ConfigTest extends TestCase
     {
         $this->assertEquals(static::SENDER, $this->fakeConfig->getSenderName());
     }
+
+    public function testGetViberSenderNameWhenSet(): void
+    {
+        $config = new TurboSms\Config(static::HTTP_TOKEN, static::SENDER, 'ViberSender');
+        $this->assertEquals('ViberSender', $config->getViberSenderName());
+    }
+
+    public function testGetViberSenderNameWhenNull(): void
+    {
+        $config = new TurboSms\Config(static::HTTP_TOKEN, static::SENDER);
+        $this->assertNull($config->getViberSenderName());
+    }
+
+    public function testGetViberSenderNameExplicitNull(): void
+    {
+        $config = new TurboSms\Config(static::HTTP_TOKEN, static::SENDER, null);
+        $this->assertNull($config->getViberSenderName());
+    }
 }

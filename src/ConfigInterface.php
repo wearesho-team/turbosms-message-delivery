@@ -11,4 +11,6 @@ interface ConfigInterface
     public function getHttpToken(): string;
 
     public function getSenderName(): string;
+
+    public function getViberSenderName(): ?string;
 }

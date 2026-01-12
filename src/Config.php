@@ -7,6 +7,7 @@ class Config implements ConfigInterface
     public function __construct(
         protected readonly string $httpToken,
         protected readonly string $senderName = ConfigInterface::SENDER,
+        protected readonly ?string $viberSenderName = null,
     ) {
     }
 
@@ -18,5 +19,10 @@ class Config implements ConfigInterface
     public function getSenderName(): string
     {
         return $this->senderName;
+    }
+
+    public function getViberSenderName(): ?string
+    {
+        return $this->viberSenderName;
     }
 }
