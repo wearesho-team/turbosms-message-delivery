@@ -9,6 +9,7 @@ enum ViberOptions: string
     case IMAGE_URL = 'viberImageUrl';
     case BUTTON_TEXT = 'viberButtonText';
     case BUTTON_URL = 'viberButtonUrl';
+    case IS_TRANSACTIONAL = 'isTransactional';
 
     public function getRequestParameter(): string
     {
@@ -16,6 +17,7 @@ enum ViberOptions: string
             ViberOptions::BUTTON_URL => 'action',
             ViberOptions::BUTTON_TEXT => 'caption',
             ViberOptions::IMAGE_URL => 'image_url',
+            ViberOptions::IS_TRANSACTIONAL => 'is_transactional',
         };
     }
 }
