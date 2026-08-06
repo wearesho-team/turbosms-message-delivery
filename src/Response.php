@@ -8,10 +8,12 @@ class Response
 {
     public const CODE_SUCCESS = 0;
     public const CODE_PONG = 1;
-    public const CODE_SUCCESS_MESSAGE_ACCEPTED = 0;
+    public const CODE_SUCCESS_MESSAGE_ACCEPTED = 800;
     public const CODE_SUCCESS_MESSAGE_SENT = 801;
     public const CODE_SUCCESS_MESSAGE_PARTIAL_ACCEPTED = 802;
     public const CODE_SUCCESS_MESSAGE_PARTIAL_SENT = 803;
+    public const CODE_SUCCESS_PROCESSED = 804;
+    public const CODE_SUCCESS_PARTIAL_PROCESSED = 805;
 
     protected const RESPONSE_KEY_CODE = 'response_code';
     protected const RESPONSE_KEY_STATUS = 'response_status';
@@ -39,6 +41,8 @@ class Response
         self::CODE_SUCCESS_MESSAGE_SENT,
         self::CODE_SUCCESS_MESSAGE_PARTIAL_ACCEPTED,
         self::CODE_SUCCESS_MESSAGE_PARTIAL_SENT,
+        self::CODE_SUCCESS_PROCESSED,
+        self::CODE_SUCCESS_PARTIAL_PROCESSED,
     ];
 
     public function __construct(
@@ -50,7 +54,18 @@ class Response
 
     public function isSuccess(): bool
     {
-        return in_array($this->code, self::$successCodes, true);
+        return self::isSuccessCode($this->code);
+    }
+
+    /**
+     * The list covers every documented success code, including the 804/805 pair returned by the
+     * group endpoints. Per-recipient entries are documented as carrying 0 or an error code, so
+     * checking them against the full list is deliberately permissive.
+     * @see https://turbosms.ua/ua/api.html
+     */
+    public static function isSuccessCode(int $code): bool
+    {
+        return in_array($code, self::$successCodes, true);
     }
 
     /**
