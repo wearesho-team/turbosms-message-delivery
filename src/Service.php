@@ -92,12 +92,17 @@ class Service implements Delivery\Batch\ServiceInterface
                 throw new Exception($responseItem->status, $responseItem->code);
             }
             $responseResultItem = $responseItem->result[array_key_first($responseItem->result)];
-            $messageId = $responseResultItem['message_id'] ?? $resultKey;
-            $reason = $responseResultItem['response_status'] ?? null;
+            $responseResultItem = is_array($responseResultItem) ? $responseResultItem : [];
+            $messageId = $responseResultItem['message_id'] ?? null;
+            $resultCode = $responseResultItem['response_code'] ?? null;
+            $reason = is_string($responseResultItem['response_status'] ?? null)
+                ? $responseResultItem['response_status']
+                : null;
             yield new Delivery\Result(
-                messageId: $messageId,
+                // Falling back to the request key keeps the batch iterable, unlike send() which throws.
+                messageId: is_string($messageId) && $messageId !== '' ? $messageId : (string)$resultKey,
                 message: $messagesArray[$resultKey],
-                status: $responseItem->isSuccess() ? Delivery\Result\Status::Accepted : Delivery\Result\Status::Failed,
+                status: $this->resolveStatus($responseItem, $resultCode),
                 reason: $reason,
             );
         }
@@ -112,32 +117,65 @@ class Service implements Delivery\Batch\ServiceInterface
 
         if (empty($response->result)) {
             throw new Delivery\Exception(
-                "Failed to get messageId (result empty) with status " . $response->status,
+                "Failed to get messageId (result empty) for recipient " . $message->getRecipient()
+                . ", " . $this->describeResponse($response),
                 $response->code
             );
         }
 
         $result = $response->result[array_key_first($response->result)];
-        if (!array_key_exists('message_id', $result)) {
+        if (!is_array($result)) {
             throw new Delivery\Exception(
-                "Failed to get messageId (key not found) with status " . $response->status,
+                "Failed to get messageId (unexpected result type " . get_debug_type($result) . ")"
+                . " for recipient " . $message->getRecipient()
+                . ", " . $this->describeResponse($response),
                 $response->code
             );
         }
-        if ($response->isSuccess()) {
-            return new Delivery\Result(
-                messageId: $result['message_id'],
-                message: $message,
-                status: Delivery\Result\Status::Accepted,
-                reason: $result['response_status'],
+
+        // TurboSMS reports per-recipient failures inside a request that may itself be reported as
+        // successful (802/803 partial). Such entries carry message_id: null.
+        $messageId = $result['message_id'] ?? null;
+        $resultCode = $result['response_code'] ?? null;
+        $resultStatus = is_string($result['response_status'] ?? null) ? $result['response_status'] : null;
+
+        if (!is_string($messageId) || $messageId === '') {
+            $recipient = is_string($result['phone'] ?? null) ? $result['phone'] : $message->getRecipient();
+            throw new Delivery\Exception(
+                "Failed to get messageId for recipient " . $recipient
+                . ": " . ($resultStatus ?? 'unknown status')
+                . " (" . (is_int($resultCode) ? $resultCode : 'no code') . ")"
+                . ", " . $this->describeResponse($response),
+                is_int($resultCode) ? $resultCode : $response->code
             );
         }
+
         return new Delivery\Result(
-            messageId: $result['message_id'],
+            messageId: $messageId,
             message: $message,
-            status: Delivery\Result\Status::Failed,
-            reason: $result['response_status'],
+            status: $this->resolveStatus($response, $resultCode),
+            reason: $resultStatus,
         );
+    }
+
+    /**
+     * A message counts as accepted only when the request as a whole and the individual recipient
+     * both succeeded — a partial success (802/803) hides per-recipient failures. This matters for
+     * batch(), which yields rejected recipients instead of throwing. In send() a documented
+     * rejection carries message_id: null and is rejected before reaching here, so the
+     * per-recipient check only guards undocumented payloads.
+     */
+    protected function resolveStatus(Response $response, mixed $resultCode): Delivery\Result\Status
+    {
+        $isAccepted = $response->isSuccess()
+            && (!is_int($resultCode) || Response::isSuccessCode($resultCode));
+
+        return $isAccepted ? Delivery\Result\Status::Accepted : Delivery\Result\Status::Failed;
+    }
+
+    protected function describeResponse(Response $response): string
+    {
+        return "response status " . $response->status . " (" . $response->code . ")";
     }
 
     protected function getRequestBody(Delivery\MessageInterface $message): array

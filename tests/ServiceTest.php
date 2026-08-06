@@ -436,6 +436,263 @@ class ServiceTest extends TestCase
         }
     }
 
+    /**
+     * The documented shape (https://turbosms.ua/ua/api.html) is the first case: message/send.json
+     * returns response_result as a list of per-recipient objects, each carrying
+     * phone/response_code/message_id. The remaining cases are payloads the docs do not describe,
+     * covering the defensive branches: a per-recipient error alongside a message_id (the docs pair
+     * an error with message_id: null), a response_result keyed by phone rather than a list, and an
+     * absent response_status.
+     */
+    public function sendResultDataProvider(): array
+    {
+        return [
+            'documented success, top level 800' => [
+                '{
+                    "response_code": 800,
+                    "response_status": "SUCCESS_MESSAGE_ACCEPTED",
+                    "response_result": [
+                        {
+                            "phone": "+380970000000",
+                            "response_code": 0,
+                            "message_id": "f83f8868-5e46-c6cf-e4fb-615e5a293754",
+                            "response_status": "OK"
+                        }
+                    ]
+                }',
+                'f83f8868-5e46-c6cf-e4fb-615e5a293754',
+                Delivery\Result\Status::Accepted,
+                'OK',
+            ],
+            'undocumented: recipient error alongside a message id is failed' => [
+                '{
+                    "response_code": 802,
+                    "response_status": "SUCCESS_MESSAGE_PARTIAL_ACCEPTED",
+                    "response_result": [
+                        {
+                            "phone": "+380970000000",
+                            "response_code": 427,
+                            "message_id": "f83f8868-5e46-c6cf-e4fb-615e5a293754",
+                            "response_status": "NOT_ALLOWED_MESSAGE_DUPLICATE"
+                        }
+                    ]
+                }',
+                'f83f8868-5e46-c6cf-e4fb-615e5a293754',
+                Delivery\Result\Status::Failed,
+                'NOT_ALLOWED_MESSAGE_DUPLICATE',
+            ],
+            'undocumented: phone keyed result without response_code stays accepted' => [
+                '{
+                    "response_code": 0,
+                    "response_status": "OK",
+                    "response_result": {
+                        "+380970000000": {
+                            "message_id": "test-id",
+                            "response_status": "OK"
+                        }
+                    }
+                }',
+                'test-id',
+                Delivery\Result\Status::Accepted,
+                'OK',
+            ],
+            'missing response_status yields null reason' => [
+                '{
+                    "response_code": 0,
+                    "response_status": "OK",
+                    "response_result": [
+                        {
+                            "phone": "+380970000000",
+                            "response_code": 0,
+                            "message_id": "test-id"
+                        }
+                    ]
+                }',
+                'test-id',
+                Delivery\Result\Status::Accepted,
+                null,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider sendResultDataProvider
+     */
+    public function testSendResult(
+        string $body,
+        string $expectedMessageId,
+        Delivery\Result\Status $expectedStatus,
+        ?string $expectedReason
+    ): void {
+        $result = $this->send($body);
+
+        $this->assertSame($expectedMessageId, $result->messageId());
+        $this->assertSame($expectedStatus, $result->status());
+        $this->assertSame($expectedReason, $result->reason());
+    }
+
+    /**
+     * Documented shapes: the two `null message id` cases, where a rejected recipient carries
+     * message_id: null while response_code/response_status describe the error, and `empty result`,
+     * since response_result may be null. The rest are payloads the docs do not describe — an omitted
+     * message_id key rather than a null one, a detail-less entry, a scalar entry — covering the
+     * defensive branches.
+     */
+    public function sendFailureDataProvider(): array
+    {
+        return [
+            'null message id under partial success' => [
+                '{
+                    "response_code": 802,
+                    "response_status": "SUCCESS_MESSAGE_PARTIAL_ACCEPTED",
+                    "response_result": [
+                        {
+                            "phone": "+380970000000",
+                            "response_code": 406,
+                            "message_id": null,
+                            "response_status": "NOT_ALLOWED_RECIPIENT_COUNTRY"
+                        }
+                    ]
+                }',
+                406,
+                'Failed to get messageId for recipient +380970000000: '
+                . 'NOT_ALLOWED_RECIPIENT_COUNTRY (406), '
+                . 'response status SUCCESS_MESSAGE_PARTIAL_ACCEPTED (802)',
+            ],
+            'null message id under top level failure' => [
+                '{
+                    "response_code": 404,
+                    "response_status": "NOT_ALLOWED_NUMBER_STOPLIST",
+                    "response_result": [
+                        {
+                            "phone": "+380970000000",
+                            "response_code": 404,
+                            "message_id": null,
+                            "response_status": "NOT_ALLOWED_NUMBER_STOPLIST"
+                        }
+                    ]
+                }',
+                404,
+                'Failed to get messageId for recipient +380970000000: '
+                . 'NOT_ALLOWED_NUMBER_STOPLIST (404), '
+                . 'response status NOT_ALLOWED_NUMBER_STOPLIST (404)',
+            ],
+            'message id key absent' => [
+                '{
+                    "response_code": 203,
+                    "response_status": "REQUIRED_BALANCE",
+                    "response_result": [
+                        {
+                            "phone": "+380970000000",
+                            "response_code": 203,
+                            "response_status": "REQUIRED_BALANCE"
+                        }
+                    ]
+                }',
+                203,
+                'Failed to get messageId for recipient +380970000000: '
+                . 'REQUIRED_BALANCE (203), '
+                . 'response status REQUIRED_BALANCE (203)',
+            ],
+            'result entry without any detail' => [
+                '{
+                    "response_code": 999,
+                    "response_status": "FATAL_ERROR",
+                    "response_result": [
+                        []
+                    ]
+                }',
+                999,
+                'Failed to get messageId for recipient +380970000000: '
+                . 'unknown status (no code), '
+                . 'response status FATAL_ERROR (999)',
+            ],
+            'empty result' => [
+                '{
+                    "response_code": 105,
+                    "response_status": "REQUIRED_AUTH",
+                    "response_result": []
+                }',
+                105,
+                'Failed to get messageId (result empty) for recipient +380970000000, '
+                . 'response status REQUIRED_AUTH (105)',
+            ],
+            'scalar result entry' => [
+                '{
+                    "response_code": 300,
+                    "response_status": "INVALID_REQUEST",
+                    "response_result": ["unexpected"]
+                }',
+                300,
+                'Failed to get messageId (unexpected result type string) for recipient +380970000000, '
+                . 'response status INVALID_REQUEST (300)',
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider sendFailureDataProvider
+     */
+    public function testSendFailure(string $body, int $expectedCode, string $expectedMessage): void
+    {
+        $this->expectException(Delivery\Exception::class);
+        $this->expectExceptionCode($expectedCode);
+        $this->expectExceptionMessage($expectedMessage);
+
+        $this->send($body);
+    }
+
+    public function testBatchReportsRejectedRecipientAsFailed(): void
+    {
+        $config = new TurboSms\Config('httpToken', 'TestSender');
+        $client = $this->createMock(GuzzleHttp\Client::class);
+        // batch() derives request keys from time(), so echo back whatever key it actually sent.
+        $client->method('request')->willReturnCallback(
+            function (string $method, string $uri, array $options): GuzzleHttp\Psr7\Response {
+                $key = array_key_first($options[GuzzleHttp\RequestOptions::JSON]);
+
+                return new GuzzleHttp\Psr7\Response(200, [], json_encode([
+                    'response_code' => 0,
+                    'response_status' => 'OK',
+                    'response_result' => [
+                        $key => [
+                            'response_code' => 802,
+                            'response_status' => 'SUCCESS_MESSAGE_PARTIAL_ACCEPTED',
+                            'response_result' => [
+                                [
+                                    'phone' => '+380970000001',
+                                    'response_code' => 406,
+                                    'message_id' => null,
+                                    'response_status' => 'NOT_ALLOWED_RECIPIENT_COUNTRY',
+                                ],
+                            ],
+                        ],
+                    ],
+                ], JSON_THROW_ON_ERROR));
+            }
+        );
+
+        $service = new TurboSms\Service($client, $config);
+        $results = iterator_to_array($service->batch([
+            new Delivery\Message('Test message', '+380970000001'),
+        ]));
+
+        $this->assertCount(1, $results);
+        $result = reset($results);
+        $this->assertSame(Delivery\Result\Status::Failed, $result->status());
+        $this->assertSame('NOT_ALLOWED_RECIPIENT_COUNTRY', $result->reason());
+    }
+
+    private function send(string $body): Delivery\ResultInterface
+    {
+        $client = $this->createMock(GuzzleHttp\Client::class);
+        $client->method('request')->willReturn(new GuzzleHttp\Psr7\Response(200, [], $body));
+
+        $service = new TurboSms\Service($client, new TurboSms\Config('httpToken', 'TestSender'));
+
+        return $service->send(new Delivery\Message('Test message', '+380970000000'));
+    }
+
     public function viberSenderNameDataProvider(): array
     {
         return [
