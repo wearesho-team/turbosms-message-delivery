@@ -75,6 +75,34 @@ $service->send(
 );
 ```
 
+### Delivery failures
+
+`send()` returns a `Delivery\Result` only when TurboSMS issued a `message_id`. When the recipient is
+rejected (blocklist, unsupported country, insufficient balance, duplicate within 90 seconds, …) the API
+returns `"message_id": null` for that recipient, and `send()` throws a `Delivery\Exception` carrying the
+recipient, the per-recipient status and the overall response status:
+
+```
+Failed to get messageId for recipient 380970000000: NOT_ALLOWED_RECIPIENT_COUNTRY (406), \
+response status SUCCESS_MESSAGE_PARTIAL_ACCEPTED (802)
+```
+
+The recipient is taken from the `phone` field of the API response, which is normalised and therefore has
+no leading `+`; it falls back to `MessageInterface::getRecipient()` when the API omits the field.
+
+`getCode()` returns the per-recipient response code (`406` above) when the API provides one, otherwise the
+top-level code. See the [status code table](https://turbosms.ua/ua/api.html) for the full list.
+
+Note that a request can succeed overall while an individual recipient fails — TurboSMS reports this as
+`802`/`803`. A rejected recipient is documented as always carrying `message_id: null`, so `send()` throws
+for every such response. Should the API ever return a per-recipient error alongside a `message_id`, the
+result is returned with `Delivery\Result\Status::Failed` and `reason()` set to the per-recipient status
+rather than being reported as `Accepted`.
+
+`batch()` does not throw for a rejected recipient, since that would abandon the remaining results. It
+yields a `Failed` result whose `messageId()` falls back to the internal request key. It does still throw
+mid-iteration if an individual request comes back with an empty `response_result`.
+
 - Check balance on current account
 ```php
 <?php
