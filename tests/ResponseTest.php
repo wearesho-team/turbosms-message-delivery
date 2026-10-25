@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Wearesho\Delivery\TurboSms\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Wearesho\Delivery\TurboSms;
 
@@ -12,7 +13,7 @@ class ResponseTest extends TestCase
     /**
      * Codes and statuses are taken from the table at https://turbosms.ua/ua/api.html
      */
-    public function successCodeDataProvider(): array
+    public static function successCodeDataProvider(): array
     {
         return [
             'OK' => [0, true],
@@ -31,17 +32,13 @@ class ResponseTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider successCodeDataProvider
-     */
+    #[DataProvider('successCodeDataProvider')]
     public function testIsSuccessCode(int $code, bool $expected): void
     {
         $this->assertSame($expected, TurboSms\Response::isSuccessCode($code));
     }
 
-    /**
-     * @dataProvider successCodeDataProvider
-     */
+    #[DataProvider('successCodeDataProvider')]
     public function testIsSuccess(int $code, bool $expected): void
     {
         $response = new TurboSms\Response($code, 'STATUS');
