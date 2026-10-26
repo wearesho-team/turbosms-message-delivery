@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Wearesho\Delivery\TurboSms\Tests;
 
 use GuzzleHttp;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Wearesho\Delivery;
 use Wearesho\Delivery\TurboSms;
 
 class ServiceTest extends TestCase
 {
-    public function balanceDataProvider(): array
+    public static function balanceDataProvider(): array
     {
         return [
             [
@@ -95,9 +96,7 @@ class ServiceTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider balanceDataProvider
-     */
+    #[DataProvider('balanceDataProvider')]
     public function testBalance(
         \Psr\Http\Message\ResponseInterface $response,
         ?TurboSms\BalanceResponse $expectedResponse = null,
@@ -106,7 +105,8 @@ class ServiceTest extends TestCase
         $config = new TurboSms\Config($httpToken = (string)time());
 
         $client = $this->createMock(GuzzleHttp\Client::class);
-        $client->method('request')
+        $client->expects($this->once())
+            ->method('request')
             ->with(
                 'POST',
                 'https://api.turbosms.ua/user/balance.json',
@@ -121,7 +121,7 @@ class ServiceTest extends TestCase
         if (!is_null($expectedException)) {
             $this->expectException(get_class($expectedException));
             $this->expectExceptionCode($expectedException->getCode());
-            $this->expectDeprecationMessage($expectedException->getMessage());
+            $this->expectExceptionMessage($expectedException->getMessage());
         }
         $response = $service->balance();
         if (!is_null($expectedResponse)) {
@@ -129,7 +129,7 @@ class ServiceTest extends TestCase
         }
     }
 
-    public function viberOptionsDataProvider(): array
+    public static function viberOptionsDataProvider(): array
     {
         return [
             'viber with all options' => [
@@ -262,9 +262,7 @@ class ServiceTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider viberOptionsDataProvider
-     */
+    #[DataProvider('viberOptionsDataProvider')]
     public function testSendWithViberOptions(
         string|array $channel,
         array $viberOptions,
@@ -444,7 +442,7 @@ class ServiceTest extends TestCase
      * an error with message_id: null), a response_result keyed by phone rather than a list, and an
      * absent response_status.
      */
-    public function sendResultDataProvider(): array
+    public static function sendResultDataProvider(): array
     {
         return [
             'documented success, top level 800' => [
@@ -515,9 +513,7 @@ class ServiceTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider sendResultDataProvider
-     */
+    #[DataProvider('sendResultDataProvider')]
     public function testSendResult(
         string $body,
         string $expectedMessageId,
@@ -538,7 +534,7 @@ class ServiceTest extends TestCase
      * message_id key rather than a null one, a detail-less entry, a scalar entry — covering the
      * defensive branches.
      */
-    public function sendFailureDataProvider(): array
+    public static function sendFailureDataProvider(): array
     {
         return [
             'null message id under partial success' => [
@@ -630,9 +626,7 @@ class ServiceTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider sendFailureDataProvider
-     */
+    #[DataProvider('sendFailureDataProvider')]
     public function testSendFailure(string $body, int $expectedCode, string $expectedMessage): void
     {
         $this->expectException(Delivery\Exception::class);
@@ -645,7 +639,7 @@ class ServiceTest extends TestCase
     public function testBatchReportsRejectedRecipientAsFailed(): void
     {
         $config = new TurboSms\Config('httpToken', 'TestSender');
-        $client = $this->createMock(GuzzleHttp\Client::class);
+        $client = $this->createStub(GuzzleHttp\Client::class);
         // batch() derives request keys from time(), so echo back whatever key it actually sent.
         $client->method('request')->willReturnCallback(
             function (string $method, string $uri, array $options): GuzzleHttp\Psr7\Response {
@@ -685,7 +679,7 @@ class ServiceTest extends TestCase
 
     private function send(string $body): Delivery\ResultInterface
     {
-        $client = $this->createMock(GuzzleHttp\Client::class);
+        $client = $this->createStub(GuzzleHttp\Client::class);
         $client->method('request')->willReturn(new GuzzleHttp\Psr7\Response(200, [], $body));
 
         $service = new TurboSms\Service($client, new TurboSms\Config('httpToken', 'TestSender'));
@@ -693,7 +687,7 @@ class ServiceTest extends TestCase
         return $service->send(new Delivery\Message('Test message', '+380970000000'));
     }
 
-    public function viberSenderNameDataProvider(): array
+    public static function viberSenderNameDataProvider(): array
     {
         return [
             'viber with config viber sender' => [
@@ -755,9 +749,7 @@ class ServiceTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider viberSenderNameDataProvider
-     */
+    #[DataProvider('viberSenderNameDataProvider')]
     public function testViberSenderNamePriority(
         string $configDefaultSender,
         ?string $configViberSender,

@@ -22,7 +22,7 @@ class ResponseException extends Exception
     public const CODE_MISSING_FIELD_RESULT_BALANCE = -1001;
     // endregion Balance
 
-    public function __construct(string $responseStatus, int $code = 0, \Throwable $previous = null)
+    public function __construct(string $responseStatus, int $code = 0, ?\Throwable $previous = null)
     {
         parent::__construct($responseStatus, $code, $previous);
     }

@@ -5,17 +5,19 @@
 [![codecov](https://codecov.io/gh/wearesho-team/turbosms-message-delivery/branch/master/graph/badge.svg)](https://codecov.io/gh/wearesho-team/turbosms-message-delivery)
 
 [wearesho-team/message-delivery](https://github.com/wearesho-team/message-delivery) implementation of
-[Delivery\ServiceInterface](https://github.com/wearesho-team/message-delivery/blob/1.3.4/src/ServiceInterface.php)
+[Delivery\ServiceInterface](https://github.com/wearesho-team/message-delivery/blob/master/src/ServiceInterface.php)
+
+Compatibility: tested on PHP 8.4, PHP 8.5
 
 ## Installation
 ```bash
-composer require wearsho-team/turbosms-message-delivery:^3.0
+composer require wearesho-team/turbosms-message-delivery:^4.2
 ```
 
 ## Quick Start
 - Install to your Project
 ```bash
-composer require wearsho-team/turbosms-message-delivery:^3.0
+composer require wearesho-team/turbosms-message-delivery:^4.2
 ```
 - Configure environment
 

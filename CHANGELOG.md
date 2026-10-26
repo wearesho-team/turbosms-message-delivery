@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - Unreleased
+
+### Changed
+- Requires PHP >= 8.4 (was ^8.1). Tested on PHP 8.4 and PHP 8.5
+- `guzzlehttp/guzzle` ^7.8.2 (was `^6.5.8 || ^7.4.5`) and `horat1us/environment-config` ^1.6 (was ^1.4):
+  first releases supporting PHP 8.4/8.5. Guzzle 6 is no longer supported
+
+### Fixed
+- PHP 8.4 deprecation "Implicitly marking parameter $previous as nullable" in the constructors of
+  `Exception` and `ResponseException`
+
 ## [4.1.0] - 2026-08-06
 
 ### Fixed
